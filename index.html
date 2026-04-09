@@ -127,7 +127,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
   .modal-body { padding:14px; }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
@@ -338,18 +337,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 </div>
 
 <script>
-const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
-const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
-
-let supabase = null;
-try {
-  if (window.supabase && typeof window.supabase.createClient === "function") {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  }
-} catch (e) {
-  console.warn("Supabase non disponibile, uso modalità locale.", e);
-}
-
 const STORAGE_KEY = "tcp_lista_tcp_2026_week_priority_v7";
 const LEGACY_STORAGE_KEYS = ["tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
 const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
@@ -359,66 +346,23 @@ let state = {
   currentMonth: "Gennaio",
   editingId: null,
   selectedId: null,
-  data: structuredClone(initialData)
+  data: loadState()
 };
 
-async function loadState() {
+function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
-      return parsed;
-    }
-
-    if (!supabase) return structuredClone(initialData);
-
-    const grouped = {};
-    months.forEach(m => { grouped[m] = []; });
-
-    const { data, error } = await supabase
-      .from("pazienti_tcp")
-      .select("*");
-
-    if (error || !data || data.length === 0) {
-      return structuredClone(initialData);
-    }
-
-    data.forEach(row => {
-      if (grouped[row.mese]) grouped[row.mese].push(row);
-    });
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(grouped));
-    return grouped;
+    if (!raw) return structuredClone(initialData);
+    const parsed = JSON.parse(raw);
+    months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
+    return parsed;
   } catch (e) {
-    console.error("Errore loadState:", e);
     return structuredClone(initialData);
   }
 }
 
-async function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
-
-    if (!supabase) return;
-
-    const allRows = months.flatMap(m =>
-      state.data[m].map(p => ({
-        ...p,
-        mese: m
-      }))
-    );
-
-    const { error } = await supabase
-      .from("pazienti_tcp")
-      .upsert(allRows);
-
-    if (error) {
-      console.error("Errore salvataggio Supabase:", error);
-    }
-  } catch (e) {
-    console.error("Errore saveState:", e);
-  }
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
 }
 
 function structuredClone(obj) {
@@ -934,14 +878,9 @@ function importJSON(event) {
 
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
 
-async function initApp() {
-  state.data = await loadState();
-  renderTabs();
-  renderTable();
-  renderSelectedPatient();
-}
-
-initApp();
+renderTabs();
+renderTable();
+renderSelectedPatient();
 </script>
 </body>
 </html>
