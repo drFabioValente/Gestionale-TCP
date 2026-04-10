@@ -128,7 +128,22 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 }
 </style>
 </head>
+  <script>
+function checkPassword() {
+  const pwd = document.getElementById("passwordInput").value;
+  if (pwd === "TCP2026") {
+    document.getElementById("loginScreen").style.display = "none";
+  } else {
+    alert("Password errata");
+  }
+}
+</script>
 <body>
+  <div id="loginScreen" style="position:fixed; inset:0; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999;">
+  <h2>Accesso Gestione TCP</h2>
+  <input type="password" id="passwordInput" placeholder="Inserisci password" style="padding:10px; font-size:18px;">
+  <button onclick="checkPassword()" style="margin-top:10px; padding:10px 20px;">Entra</button>
+</div>
 <header>
   <h1>Gestione Lista TCP 2026</h1>
   <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
