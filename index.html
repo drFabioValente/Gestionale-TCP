@@ -130,6 +130,18 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div id="loginScreen" style="position:fixed; inset:0; background:#f5f7fb; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; padding:20px;">
+  <div style="max-width:420px; width:100%; background:#fff; border:1px solid #d8e0ea; border-radius:16px; box-shadow:0 8px 24px rgba(15,23,42,.08); padding:24px;">
+    <h2 style="margin:0 0 10px;">Accesso Gestione TCP</h2>
+    <div style="color:#64748b; margin-bottom:14px;">Inserisci la password per accedere al gestionale.</div>
+    <input type="password" id="passwordInput" placeholder="Password" style="width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:12px; background:#fff;">
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <button class="primary" onclick="checkPassword()" style="flex:1;">Entra</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <h1>Gestione Lista TCP 2026</h1>
   <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
@@ -338,9 +350,19 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 </div>
 
 <script>
+const APP_PASSWORD = "TCP2026";
 const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
 const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+
+function checkPassword() {
+  const pwd = document.getElementById("passwordInput").value;
+  if (pwd === APP_PASSWORD) {
+    document.getElementById("loginScreen").style.display = "none";
+  } else {
+    alert("Password errata");
+  }
+}
 
 const STORAGE_KEY = "tcp_lista_tcp_2026_week_priority_v7";
 const LEGACY_STORAGE_KEYS = ["tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
@@ -354,88 +376,82 @@ let state = {
   data: structuredClone(initialData)
 };
 
-function normalizeMonthsShape(parsed) {
-  months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
-  return parsed;
-}
-
 async function loadState() {
-  try {
-    const { data, error } = await supabase
-      .from("pazienti_tcp")
-      .select("*")
-      .order("id", { ascending: true });
-
-    if (!error && Array.isArray(data) && data.length) {
-      const grouped = {};
-      months.forEach(m => grouped[m] = []);
-      data.forEach(row => {
-        const mese = textValue(row.mese);
-        if (grouped[mese]) grouped[mese].push({
-          id: textValue(row.id),
-          ordineChiamata: textValue(row.ordineChiamata),
-          nome: textValue(row.nome),
-          recapito: textValue(row.recapito),
-          medico: textValue(row.medico),
-          patologia: textValue(row.patologia),
-          dataInserimento: textValue(row.dataInserimento),
-          dataEsame: textValue(row.dataEsame),
-          conferma: textValue(row.conferma),
-          note: textValue(row.note),
-          statoChiamata: textValue(row.statoChiamata) || "Non chiamato",
-          ultimaChiamata: textValue(row.ultimaChiamata),
-          prossimoRichiamo: textValue(row.prossimoRichiamo),
-          esitoChiamata: textValue(row.esitoChiamata),
-          noteChiamata: textValue(row.noteChiamata),
-          statoPrenotazione: textValue(row.statoPrenotazione) || "In lista"
-        });
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(grouped));
-      return grouped;
+  const fallback = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
+      if (!raw) return structuredClone(initialData);
+      const parsed = JSON.parse(raw);
+      months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
+      return parsed;
+    } catch (e) {
+      return structuredClone(initialData);
     }
-  } catch (e) {}
+  };
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
-    if (!raw) return structuredClone(initialData);
-    return normalizeMonthsShape(JSON.parse(raw));
+    if (!supabase) return fallback();
+    const grouped = {};
+    months.forEach(m => grouped[m] = []);
+    const { data, error } = await supabase.from("pazienti_tcp").select("*");
+    if (error || !data || data.length === 0) {
+      return fallback();
+    }
+    data.forEach(row => {
+      const mese = row.mese;
+      if (!grouped[mese]) grouped[mese] = [];
+      grouped[mese].push({
+        id: row.id ?? "",
+        ordineChiamata: row.ordineChiamata ?? "",
+        nome: row.nome ?? "",
+        recapito: row.recapito ?? "",
+        medico: row.medico ?? "",
+        patologia: row.patologia ?? "",
+        dataInserimento: row.dataInserimento ?? "",
+        dataEsame: row.dataEsame ?? "",
+        conferma: row.conferma ?? "",
+        note: row.note ?? "",
+        statoChiamata: row.statoChiamata ?? "Non chiamato",
+        ultimaChiamata: row.ultimaChiamata ?? "",
+        prossimoRichiamo: row.prossimoRichiamo ?? "",
+        esitoChiamata: row.esitoChiamata ?? "",
+        noteChiamata: row.noteChiamata ?? "",
+        statoPrenotazione: row.statoPrenotazione ?? "In lista"
+      });
+    });
+    return grouped;
   } catch (e) {
-    return structuredClone(initialData);
+    return fallback();
   }
 }
 
 async function saveState() {
-  const allRows = months.flatMap(m =>
-    state.data[m].map(p => ({
-      id: textValue(p.id),
-      mese: m,
-      nome: textValue(p.nome),
-      recapito: textValue(p.recapito),
-      medico: textValue(p.medico),
-      patologia: textValue(p.patologia),
-      dataInserimento: textValue(p.dataInserimento),
-      dataEsame: textValue(p.dataEsame),
-      conferma: textValue(p.conferma),
-      note: textValue(p.note),
-      statoChiamata: textValue(p.statoChiamata),
-      ultimaChiamata: textValue(p.ultimaChiamata),
-      prossimoRichiamo: textValue(p.prossimoRichiamo),
-      esitoChiamata: textValue(p.esitoChiamata),
-      noteChiamata: textValue(p.noteChiamata),
-      statoPrenotazione: textValue(p.statoPrenotazione),
-      ordineChiamata: textValue(p.ordineChiamata)
-    }))
-  );
-
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
-
-  const { error } = await supabase
-    .from("pazienti_tcp")
-    .upsert(allRows, { onConflict: "id" });
-
-  if (error) {
-    console.error("Errore Supabase:", error);
-    alert("Errore salvataggio online: " + error.message);
+  try {
+    if (!supabase) return;
+    const allRows = months.flatMap(m => state.data[m].map(p => ({
+      id: p.id ?? "",
+      mese: m,
+      ordineChiamata: p.ordineChiamata ?? "",
+      nome: p.nome ?? "",
+      recapito: p.recapito ?? "",
+      medico: p.medico ?? "",
+      patologia: p.patologia ?? "",
+      dataInserimento: p.dataInserimento ?? "",
+      dataEsame: p.dataEsame ?? "",
+      conferma: p.conferma ?? "",
+      note: p.note ?? "",
+      statoChiamata: p.statoChiamata ?? "Non chiamato",
+      ultimaChiamata: p.ultimaChiamata ?? "",
+      prossimoRichiamo: p.prossimoRichiamo ?? "",
+      esitoChiamata: p.esitoChiamata ?? "",
+      noteChiamata: p.noteChiamata ?? "",
+      statoPrenotazione: p.statoPrenotazione ?? "In lista"
+    })));
+    const { error } = await supabase.from("pazienti_tcp").upsert(allRows, { onConflict: 'id' });
+    if (error) console.error("Supabase save error:", error);
+  } catch (e) {
+    console.error("Supabase save exception:", e);
   }
 }
 
@@ -957,21 +973,17 @@ async function initApp() {
   renderTabs();
   renderTable();
   renderSelectedPatient();
-}
-
-async function refreshFromSupabase() {
-  if (document.getElementById("editorBackdrop").classList.contains("open")) return;
-  const fresh = await loadState();
-  if (JSON.stringify(fresh) !== JSON.stringify(state.data)) {
-    state.data = fresh;
+  setInterval(async () => {
+    const current = state.selectedId;
+    state.data = await loadState();
+    if (current) state.selectedId = current;
     renderTabs();
     renderTable();
     renderSelectedPatient();
-  }
+  }, 15000);
 }
 
 initApp();
-setInterval(refreshFromSupabase, 15000);
 </script>
 </body>
 </html>
