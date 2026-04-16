@@ -127,23 +127,9 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
   .modal-body { padding:14px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-  <script>
-function checkPassword() {
-  const pwd = document.getElementById("passwordInput").value;
-  if (pwd === "TCP2026") {
-    document.getElementById("loginScreen").style.display = "none";
-  } else {
-    alert("Password errata");
-  }
-}
-</script>
 <body>
-  <div id="loginScreen" style="position:fixed; inset:0; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999;">
-  <h2>Accesso Gestione TCP</h2>
-  <input type="password" id="passwordInput" placeholder="Inserisci password" style="padding:10px; font-size:18px;">
-  <button onclick="checkPassword()" style="margin-top:10px; padding:10px 20px;">Entra</button>
-</div>
 <header>
   <h1>Gestione Lista TCP 2026</h1>
   <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
@@ -352,6 +338,10 @@ function checkPassword() {
 </div>
 
 <script>
+const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 const STORAGE_KEY = "tcp_lista_tcp_2026_week_priority_v7";
 const LEGACY_STORAGE_KEYS = ["tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
 const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
@@ -361,23 +351,92 @@ let state = {
   currentMonth: "Gennaio",
   editingId: null,
   selectedId: null,
-  data: loadState()
+  data: structuredClone(initialData)
 };
 
-function loadState() {
+function normalizeMonthsShape(parsed) {
+  months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
+  return parsed;
+}
+
+async function loadState() {
+  try {
+    const { data, error } = await supabase
+      .from("pazienti_tcp")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (!error && Array.isArray(data) && data.length) {
+      const grouped = {};
+      months.forEach(m => grouped[m] = []);
+      data.forEach(row => {
+        const mese = textValue(row.mese);
+        if (grouped[mese]) grouped[mese].push({
+          id: textValue(row.id),
+          ordineChiamata: textValue(row.ordineChiamata),
+          nome: textValue(row.nome),
+          recapito: textValue(row.recapito),
+          medico: textValue(row.medico),
+          patologia: textValue(row.patologia),
+          dataInserimento: textValue(row.dataInserimento),
+          dataEsame: textValue(row.dataEsame),
+          conferma: textValue(row.conferma),
+          note: textValue(row.note),
+          statoChiamata: textValue(row.statoChiamata) || "Non chiamato",
+          ultimaChiamata: textValue(row.ultimaChiamata),
+          prossimoRichiamo: textValue(row.prossimoRichiamo),
+          esitoChiamata: textValue(row.esitoChiamata),
+          noteChiamata: textValue(row.noteChiamata),
+          statoPrenotazione: textValue(row.statoPrenotazione) || "In lista"
+        });
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(grouped));
+      return grouped;
+    }
+  } catch (e) {}
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
     if (!raw) return structuredClone(initialData);
-    const parsed = JSON.parse(raw);
-    months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
-    return parsed;
+    return normalizeMonthsShape(JSON.parse(raw));
   } catch (e) {
     return structuredClone(initialData);
   }
 }
 
-function saveState() {
+async function saveState() {
+  const allRows = months.flatMap(m =>
+    state.data[m].map(p => ({
+      id: textValue(p.id),
+      mese: m,
+      nome: textValue(p.nome),
+      recapito: textValue(p.recapito),
+      medico: textValue(p.medico),
+      patologia: textValue(p.patologia),
+      dataInserimento: textValue(p.dataInserimento),
+      dataEsame: textValue(p.dataEsame),
+      conferma: textValue(p.conferma),
+      note: textValue(p.note),
+      statoChiamata: textValue(p.statoChiamata),
+      ultimaChiamata: textValue(p.ultimaChiamata),
+      prossimoRichiamo: textValue(p.prossimoRichiamo),
+      esitoChiamata: textValue(p.esitoChiamata),
+      noteChiamata: textValue(p.noteChiamata),
+      statoPrenotazione: textValue(p.statoPrenotazione),
+      ordineChiamata: textValue(p.ordineChiamata)
+    }))
+  );
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+
+  const { error } = await supabase
+    .from("pazienti_tcp")
+    .upsert(allRows, { onConflict: "id" });
+
+  if (error) {
+    console.error("Errore Supabase:", error);
+    alert("Errore salvataggio online: " + error.message);
+  }
 }
 
 function structuredClone(obj) {
@@ -893,9 +952,26 @@ function importJSON(event) {
 
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
 
-renderTabs();
-renderTable();
-renderSelectedPatient();
+async function initApp() {
+  state.data = await loadState();
+  renderTabs();
+  renderTable();
+  renderSelectedPatient();
+}
+
+async function refreshFromSupabase() {
+  if (document.getElementById("editorBackdrop").classList.contains("open")) return;
+  const fresh = await loadState();
+  if (JSON.stringify(fresh) !== JSON.stringify(state.data)) {
+    state.data = fresh;
+    renderTabs();
+    renderTable();
+    renderSelectedPatient();
+  }
+}
+
+initApp();
+setInterval(refreshFromSupabase, 15000);
 </script>
 </body>
 </html>
