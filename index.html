@@ -130,18 +130,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<div id="loginScreen" style="position:fixed; inset:0; background:#f5f7fb; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; padding:20px;">
-  <div style="max-width:420px; width:100%; background:#fff; border:1px solid #d8e0ea; border-radius:16px; box-shadow:0 8px 24px rgba(15,23,42,.08); padding:24px;">
-    <h2 style="margin:0 0 10px;">Accesso Gestione TCP</h2>
-    <div style="color:#64748b; margin-bottom:14px;">Inserisci la password per accedere al gestionale.</div>
-    <input type="password" id="passwordInput" placeholder="Password" style="width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:12px; background:#fff;">
-    <div style="display:flex; gap:10px; margin-top:12px;">
-      <button class="primary" onclick="checkPassword()" style="flex:1;">Entra</button>
-    </div>
-  </div>
-</div>
-
 <header>
   <h1>Gestione Lista TCP 2026</h1>
   <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
@@ -350,19 +338,18 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 </div>
 
 <script>
-const APP_PASSWORD = "TCP2026";
 const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
 const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
-const supabase = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
-
-function checkPassword() {
-  const pwd = document.getElementById("passwordInput").value;
-  if (pwd === APP_PASSWORD) {
-    document.getElementById("loginScreen").style.display = "none";
-  } else {
-    alert("Password errata");
+let supabase = null;
+try {
+  if (window.supabase && window.supabase.createClient) {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
   }
+} catch (e) {
+  console.warn("Supabase non disponibile", e);
 }
+let syncEnabled = !!supabase;
+let refreshIntervalId = null;
 
 const STORAGE_KEY = "tcp_lista_tcp_2026_week_priority_v7";
 const LEGACY_STORAGE_KEYS = ["tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
@@ -377,81 +364,115 @@ let state = {
 };
 
 async function loadState() {
-  const fallback = () => {
+  const fallbackRaw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
+  const fallbackData = (() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
-      if (!raw) return structuredClone(initialData);
-      const parsed = JSON.parse(raw);
+      if (!fallbackRaw) return structuredClone(initialData);
+      const parsed = JSON.parse(fallbackRaw);
       months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
       return parsed;
     } catch (e) {
       return structuredClone(initialData);
     }
-  };
+  })();
+
+  if (!syncEnabled) return fallbackData;
 
   try {
-    if (!supabase) return fallback();
+    const { data, error } = await supabase
+      .from("pazienti_tcp")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.warn("Errore lettura Supabase, uso fallback locale:", error.message);
+      return fallbackData;
+    }
+
     const grouped = {};
     months.forEach(m => grouped[m] = []);
-    const { data, error } = await supabase.from("pazienti_tcp").select("*");
-    if (error || !data || data.length === 0) {
-      return fallback();
-    }
-    data.forEach(row => {
-      const mese = row.mese;
-      if (!grouped[mese]) grouped[mese] = [];
-      grouped[mese].push({
-        id: row.id ?? "",
-        ordineChiamata: row.ordineChiamata ?? "",
-        nome: row.nome ?? "",
-        recapito: row.recapito ?? "",
-        medico: row.medico ?? "",
-        patologia: row.patologia ?? "",
-        dataInserimento: row.dataInserimento ?? "",
-        dataEsame: row.dataEsame ?? "",
-        conferma: row.conferma ?? "",
-        note: row.note ?? "",
-        statoChiamata: row.statoChiamata ?? "Non chiamato",
-        ultimaChiamata: row.ultimaChiamata ?? "",
-        prossimoRichiamo: row.prossimoRichiamo ?? "",
-        esitoChiamata: row.esitoChiamata ?? "",
-        noteChiamata: row.noteChiamata ?? "",
-        statoPrenotazione: row.statoPrenotazione ?? "In lista"
+
+    (data || []).forEach(row => {
+      const month = textValue(row.mese);
+      if (!grouped[month]) grouped[month] = [];
+      grouped[month].push({
+        id: textValue(row.id),
+        ordineChiamata: textValue(row.ordineChiamata),
+        nome: textValue(row.nome),
+        recapito: textValue(row.recapito),
+        medico: textValue(row.medico),
+        patologia: textValue(row.patologia),
+        dataInserimento: textValue(row.dataInserimento),
+        dataEsame: textValue(row.dataEsame),
+        conferma: textValue(row.conferma),
+        note: textValue(row.note),
+        statoChiamata: textValue(row.statoChiamata) || "Non chiamato",
+        ultimaChiamata: textValue(row.ultimaChiamata),
+        prossimoRichiamo: textValue(row.prossimoRichiamo),
+        esitoChiamata: textValue(row.esitoChiamata),
+        noteChiamata: textValue(row.noteChiamata),
+        statoPrenotazione: textValue(row.statoPrenotazione) || "In lista"
       });
     });
+
+    months.forEach(m => { if (!Array.isArray(grouped[m])) grouped[m] = []; });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(grouped));
     return grouped;
   } catch (e) {
-    return fallback();
+    console.warn("Errore loadState, uso fallback locale:", e);
+    return fallbackData;
   }
 }
 
 async function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+  if (!syncEnabled) return;
+
   try {
-    if (!supabase) return;
-    const allRows = months.flatMap(m => state.data[m].map(p => ({
-      id: p.id ?? "",
-      mese: m,
-      ordineChiamata: p.ordineChiamata ?? "",
-      nome: p.nome ?? "",
-      recapito: p.recapito ?? "",
-      medico: p.medico ?? "",
-      patologia: p.patologia ?? "",
-      dataInserimento: p.dataInserimento ?? "",
-      dataEsame: p.dataEsame ?? "",
-      conferma: p.conferma ?? "",
-      note: p.note ?? "",
-      statoChiamata: p.statoChiamata ?? "Non chiamato",
-      ultimaChiamata: p.ultimaChiamata ?? "",
-      prossimoRichiamo: p.prossimoRichiamo ?? "",
-      esitoChiamata: p.esitoChiamata ?? "",
-      noteChiamata: p.noteChiamata ?? "",
-      statoPrenotazione: p.statoPrenotazione ?? "In lista"
-    })));
-    const { error } = await supabase.from("pazienti_tcp").upsert(allRows, { onConflict: 'id' });
-    if (error) console.error("Supabase save error:", error);
+    const allRows = months.flatMap(m =>
+      state.data[m].map(p => ({
+        id: textValue(p.id),
+        mese: m,
+        nome: textValue(p.nome),
+        recapito: textValue(p.recapito),
+        medico: textValue(p.medico),
+        patologia: textValue(p.patologia),
+        dataInserimento: textValue(p.dataInserimento),
+        dataEsame: textValue(p.dataEsame),
+        conferma: textValue(p.conferma),
+        note: textValue(p.note),
+        statoChiamata: textValue(p.statoChiamata) || "Non chiamato",
+        ultimaChiamata: textValue(p.ultimaChiamata),
+        prossimoRichiamo: textValue(p.prossimoRichiamo),
+        esitoChiamata: textValue(p.esitoChiamata),
+        noteChiamata: textValue(p.noteChiamata),
+        statoPrenotazione: textValue(p.statoPrenotazione) || "In lista",
+        ordineChiamata: textValue(p.ordineChiamata)
+      }))
+    );
+
+    const { error: deleteError } = await supabase
+      .from("pazienti_tcp")
+      .delete()
+      .neq("id", "__none__");
+
+    if (deleteError) {
+      console.warn("Errore pulizia Supabase:", deleteError.message);
+      return;
+    }
+
+    if (allRows.length) {
+      const { error } = await supabase
+        .from("pazienti_tcp")
+        .upsert(allRows, { onConflict: "id" });
+
+      if (error) {
+        console.warn("Errore salvataggio Supabase:", error.message);
+      }
+    }
   } catch (e) {
-    console.error("Supabase save exception:", e);
+    console.warn("Errore saveState:", e);
   }
 }
 
@@ -968,19 +989,31 @@ function importJSON(event) {
 
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
 
+async function refreshFromSupabaseSilently() {
+  if (!syncEnabled || document.getElementById("editorBackdrop").classList.contains("open")) return;
+  try {
+    const freshData = await loadState();
+    state.data = freshData;
+    const arr = state.data[state.currentMonth] || [];
+    if (state.selectedId && !arr.some(p => p.id === state.selectedId)) state.selectedId = null;
+    if (state.editingId && !arr.some(p => p.id === state.editingId)) state.editingId = null;
+    renderTabs();
+    renderTable();
+    renderSelectedPatient();
+  } catch (e) {
+    console.warn("Refresh silenzioso fallito:", e);
+  }
+}
+
 async function initApp() {
   state.data = await loadState();
   renderTabs();
   renderTable();
   renderSelectedPatient();
-  setInterval(async () => {
-    const current = state.selectedId;
-    state.data = await loadState();
-    if (current) state.selectedId = current;
-    renderTabs();
-    renderTable();
-    renderSelectedPatient();
-  }, 15000);
+
+  if (syncEnabled) {
+    refreshIntervalId = setInterval(refreshFromSupabaseSilently, 15000);
+  }
 }
 
 initApp();
