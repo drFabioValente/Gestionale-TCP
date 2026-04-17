@@ -148,6 +148,16 @@
   </style>
 </head>
 <body>
+  <script>
+  const PASSWORD = "tcp2026";
+
+  const entered = prompt("Inserisci password");
+
+  if (entered !== PASSWORD) {
+    document.write("<h1>Accesso negato</h1>");
+    throw new Error("Accesso negato");
+  }
+</script>
   <header>
     <h1>Gestione Lista TCP 2026</h1>
     <div class="small">
