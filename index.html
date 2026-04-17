@@ -1,358 +1,396 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestione Lista TCP 2026 - v7</title>
-<style>
-:root {
-  --bg:#f5f7fb; --card:#ffffff; --line:#d8e0ea; --text:#17212b; --muted:#64748b;
-  --primary:#1d4ed8; --primary-soft:#dbeafe; --ok:#166534; --warn:#92400e; --bad:#991b1b;
-  --ok-bg:#dcfce7; --warn-bg:#fef3c7; --bad-bg:#fee2e2; --neutral-bg:#e2e8f0;
-  --radius:16px; --shadow:0 8px 24px rgba(15,23,42,.08);
-}
-* { box-sizing:border-box; }
-html, body { margin:0; padding:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
-body.modal-open { overflow:hidden; }
-header {
-  position:sticky; top:0; z-index:40;
-  background:linear-gradient(135deg,#eff6ff,#f8fafc 60%,#eef2ff);
-  border-bottom:1px solid var(--line); padding:18px 20px 14px;
-}
-h1 { margin:0 0 6px; font-size:1.55rem; }
-h2, h3 { margin:0 0 8px; }
-.container { max-width:1500px; margin:0 auto; padding:16px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
-.card-body { padding:16px 18px; }
-.small { color:var(--muted); font-size:.92rem; line-height:1.4; }
-.grid-top { display:grid; grid-template-columns:1.15fr .85fr; gap:16px; margin-bottom:16px; }
-.kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; }
-.kpi { border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:#fbfdff; }
-.kpi .label { color:var(--muted); font-size:.88rem; }
-.kpi .value { font-size:1.45rem; font-weight:700; margin-top:4px; }
-.tabs { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 10px; }
-.tab {
-  border:1px solid #bfdbfe; background:#fff; color:var(--primary); padding:9px 12px; border-radius:999px; cursor:pointer; font-weight:600;
-}
-.tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-.btns { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
-input, select, textarea, button { font:inherit; }
-button {
-  border:1px solid #cbd5e1; background:#eef2ff; color:#1f2937; padding:10px 12px; border-radius:12px; cursor:pointer;
-}
-button.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
-button.good { background:var(--ok-bg); color:var(--ok); border-color:#bbf7d0; }
-button.warn { background:var(--warn-bg); color:var(--warn); border-color:#fde68a; }
-button.bad { background:var(--bad-bg); color:var(--bad); border-color:#fecaca; }
-button.ghost { background:#fff; }
-button.slim { padding:7px 10px; border-radius:10px; }
-input[type="text"], input[type="number"], input[type="date"], select, textarea {
-  width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; background:#fff;
-}
-textarea { min-height:86px; resize:vertical; }
-.controls { display:grid; grid-template-columns:1.2fr .8fr .8fr .7fr .8fr .7fr; gap:10px; }
-.layout-main { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
-.table-wrap { overflow:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radius); }
-table { width:100%; border-collapse:collapse; min-width:1320px; }
-th, td { border-bottom:1px solid #e2e8f0; padding:12px 10px; text-align:left; vertical-align:top; }
-thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94rem; }
-.badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 10px; font-weight:700; font-size:.82rem; white-space:nowrap; }
-.badge.neutral { background:var(--neutral-bg); color:#334155; }
-.badge.ok { background:var(--ok-bg); color:var(--ok); }
-.badge.warn { background:var(--warn-bg); color:var(--warn); }
-.badge.bad { background:var(--bad-bg); color:var(--bad); }
-.badge.primary { background:var(--primary-soft); color:var(--primary); }
-.order-box { display:flex; align-items:center; gap:8px; min-width:150px; }
-.order-circle {
-  min-width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; font-weight:800;
-  background:var(--primary-soft); color:var(--primary); border:1px solid #bfdbfe;
-}
-.order-empty {
-  min-width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px;
-  background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1;
-}
-.order-input { width:72px !important; }
-.row-actions { display:flex; flex-wrap:wrap; gap:6px; min-width:190px; }
-.two-col { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; }
-.details-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.detail { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fbfdff; }
-.detail .label { color:var(--muted); font-size:.82rem; margin-bottom:4px; }
-.detail .value { font-weight:600; white-space:pre-wrap; word-break:break-word; }
-.detail.full { grid-column:1/-1; }
-.empty-box {
-  border:1px dashed #cbd5e1; border-radius:14px; padding:18px; background:#f8fafc; color:var(--muted);
-}
-.footer-note { color:var(--muted); font-size:.88rem; margin-top:10px; }
-.hidden { display:none !important; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestione Lista TCP 2026 - v7</title>
+  <style>
+    :root {
+      --bg:#f5f7fb; --card:#ffffff; --line:#d8e0ea; --text:#17212b; --muted:#64748b;
+      --primary:#1d4ed8; --primary-soft:#dbeafe; --ok:#166534; --warn:#92400e; --bad:#991b1b;
+      --ok-bg:#dcfce7; --warn-bg:#fef3c7; --bad-bg:#fee2e2; --neutral-bg:#e2e8f0;
+      --radius:16px; --shadow:0 8px 24px rgba(15,23,42,.08);
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; padding:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    body.modal-open { overflow:hidden; }
 
-.modal-backdrop {
-  position:fixed; inset:0; background:rgba(15,23,42,.5); display:none; align-items:center; justify-content:center; padding:18px; z-index:100;
-}
-.modal-backdrop.open { display:flex; }
-.modal {
-  width:min(980px, 100%); max-height:calc(100vh - 36px); overflow:auto; background:#fff; border-radius:22px;
-  border:1px solid var(--line); box-shadow:0 24px 64px rgba(15,23,42,.28);
-}
-.modal-header {
-  position:sticky; top:0; z-index:1; background:#fff; border-bottom:1px solid var(--line);
-  padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
-}
-.modal-body { padding:16px 18px 20px; }
-.form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.form-grid .full { grid-column:1/-1; }
-.inline-row { display:flex; gap:8px; align-items:center; }
-.inline-row .grow { flex:1; }
-.sticky-actions {
-  position:sticky; bottom:0; background:#fff; padding-top:12px; margin-top:14px; border-top:1px solid var(--line);
-}
+    header {
+      position:sticky; top:0; z-index:40;
+      background:linear-gradient(135deg,#eff6ff,#f8fafc 60%,#eef2ff);
+      border-bottom:1px solid var(--line); padding:18px 20px 14px;
+    }
 
-@media (max-width: 1100px) {
-  .grid-top, .two-col { grid-template-columns:1fr; }
-  .controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .kpis { grid-template-columns:repeat(3,1fr); }
-}
-@media (max-width: 760px) {
-  header { padding:16px 14px 12px; }
-  .container { padding:12px; }
-  .kpis { grid-template-columns:repeat(2,1fr); }
-  .controls, .form-grid, .details-grid { grid-template-columns:1fr; }
-  .modal-backdrop { padding:0; }
-  .modal { width:100%; max-height:100vh; height:100vh; border-radius:0; }
-  .modal-header { padding:12px 14px; }
-  .modal-body { padding:14px; }
-}
-</style>
+    h1 { margin:0 0 6px; font-size:1.55rem; }
+    h2, h3 { margin:0 0 8px; }
+
+    .container { max-width:1500px; margin:0 auto; padding:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+    .card-body { padding:16px 18px; }
+    .small { color:var(--muted); font-size:.92rem; line-height:1.4; }
+
+    .grid-top { display:grid; grid-template-columns:1.15fr .85fr; gap:16px; margin-bottom:16px; }
+    .kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:12px; }
+    .kpi { border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:#fbfdff; }
+    .kpi .label { color:var(--muted); font-size:.88rem; }
+    .kpi .value { font-size:1.45rem; font-weight:700; margin-top:4px; }
+
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 10px; }
+    .tab {
+      border:1px solid #bfdbfe; background:#fff; color:var(--primary);
+      padding:9px 12px; border-radius:999px; cursor:pointer; font-weight:600;
+    }
+    .tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+    .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    input, select, textarea, button { font:inherit; }
+
+    button {
+      border:1px solid #cbd5e1; background:#eef2ff; color:#1f2937;
+      padding:10px 12px; border-radius:12px; cursor:pointer;
+    }
+    button.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    button.good { background:var(--ok-bg); color:var(--ok); border-color:#bbf7d0; }
+    button.warn { background:var(--warn-bg); color:var(--warn); border-color:#fde68a; }
+    button.bad { background:var(--bad-bg); color:var(--bad); border-color:#fecaca; }
+    button.ghost { background:#fff; }
+    button.slim { padding:7px 10px; border-radius:10px; }
+
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; background:#fff;
+    }
+    textarea { min-height:86px; resize:vertical; }
+
+    .controls { display:grid; grid-template-columns:1.2fr .8fr .8fr .7fr .8fr .7fr; gap:10px; }
+    .layout-main { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+    .table-wrap { overflow:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radius); }
+    table { width:100%; border-collapse:collapse; min-width:1320px; }
+    th, td { border-bottom:1px solid #e2e8f0; padding:12px 10px; text-align:left; vertical-align:top; }
+    thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94rem; }
+
+    .badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 10px; font-weight:700; font-size:.82rem; white-space:nowrap; }
+    .badge.neutral { background:var(--neutral-bg); color:#334155; }
+    .badge.ok { background:var(--ok-bg); color:var(--ok); }
+    .badge.warn { background:var(--warn-bg); color:var(--warn); }
+    .badge.bad { background:var(--bad-bg); color:var(--bad); }
+    .badge.primary { background:var(--primary-soft); color:var(--primary); }
+
+    .order-box { display:flex; align-items:center; gap:8px; min-width:150px; }
+    .order-circle {
+      min-width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+      border-radius:999px; font-weight:800; background:var(--primary-soft); color:var(--primary); border:1px solid #bfdbfe;
+    }
+    .order-empty {
+      min-width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+      border-radius:999px; background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1;
+    }
+    .order-input { width:72px !important; }
+
+    .row-actions { display:flex; flex-wrap:wrap; gap:6px; min-width:190px; }
+    .two-col { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; }
+    .details-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .detail { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fbfdff; }
+    .detail .label { color:var(--muted); font-size:.82rem; margin-bottom:4px; }
+    .detail .value { font-weight:600; white-space:pre-wrap; word-break:break-word; }
+    .detail.full { grid-column:1/-1; }
+
+    .empty-box {
+      border:1px dashed #cbd5e1; border-radius:14px; padding:18px; background:#f8fafc; color:var(--muted);
+    }
+
+    .footer-note { color:var(--muted); font-size:.88rem; margin-top:10px; }
+    .hidden { display:none !important; }
+
+    .modal-backdrop {
+      position:fixed; inset:0; background:rgba(15,23,42,.5); display:none;
+      align-items:center; justify-content:center; padding:18px; z-index:100;
+    }
+    .modal-backdrop.open { display:flex; }
+
+    .modal {
+      width:min(980px, 100%); max-height:calc(100vh - 36px); overflow:auto;
+      background:#fff; border-radius:22px; border:1px solid var(--line);
+      box-shadow:0 24px 64px rgba(15,23,42,.28);
+    }
+
+    .modal-header {
+      position:sticky; top:0; z-index:1; background:#fff; border-bottom:1px solid var(--line);
+      padding:14px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+    }
+
+    .modal-body { padding:16px 18px 20px; }
+    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .form-grid .full { grid-column:1/-1; }
+    .inline-row { display:flex; gap:8px; align-items:center; }
+    .inline-row .grow { flex:1; }
+
+    .sticky-actions {
+      position:sticky; bottom:0; background:#fff; padding-top:12px;
+      margin-top:14px; border-top:1px solid var(--line);
+    }
+
+    @media (max-width: 1100px) {
+      .grid-top, .two-col { grid-template-columns:1fr; }
+      .controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .kpis { grid-template-columns:repeat(3,1fr); }
+    }
+
+    @media (max-width: 760px) {
+      header { padding:16px 14px 12px; }
+      .container { padding:12px; }
+      .kpis { grid-template-columns:repeat(2,1fr); }
+      .controls, .form-grid, .details-grid { grid-template-columns:1fr; }
+      .modal-backdrop { padding:0; }
+      .modal { width:100%; max-height:100vh; height:100vh; border-radius:0; }
+      .modal-header { padding:12px 14px; }
+      .modal-body { padding:14px; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>Gestione Lista TCP 2026</h1>
-  <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
-</header>
-
-<div class="container">
-  <div class="grid-top">
-    <div class="card">
-      <div class="card-body">
-        <h2>Panoramica mese</h2>
-        <div class="small">Scegli il mese e assegna tu la settimana di esecuzione: 1, 2, 3 o 4. L’infermiere vede subito in quale settimana del mese chiamare e prenotare il paziente.</div>
-        <div id="monthTabs" class="tabs"></div>
-        <div class="kpis">
-          <div class="kpi"><div class="label">Totale pazienti</div><div class="value" id="kTotal">0</div></div>
-          <div class="kpi"><div class="label">Da chiamare</div><div class="value" id="kToCall">0</div></div>
-          <div class="kpi"><div class="label">Già chiamati</div><div class="value" id="kCalled">0</div></div>
-          <div class="kpi"><div class="label">Da richiamare</div><div class="value" id="kRecall">0</div></div>
-          <div class="kpi"><div class="label">Prenotati / eseguiti</div><div class="value" id="kBooked">0</div></div>
-        </div>
-      </div>
+  <header>
+    <h1>Gestione Lista TCP 2026</h1>
+    <div class="small">
+      Priorità di chiamata solo manuale. In questa versione puoi
+      <strong>visualizzare la scheda di prenotazione</strong>,
+      <strong>modificare la scheda del paziente</strong>,
+      <strong>inserire nuovi pazienti</strong> e
+      <strong>cambiare la data dell'esame</strong>.
     </div>
+  </header>
 
-    <div class="card">
-      <div class="card-body">
-        <h2>Azioni rapide</h2>
-        <div class="small">Le modifiche vengono salvate su Supabase.</div>
-        <div class="btns">
-          <button class="primary" onclick="addNewPatient()">Nuovo paziente</button>
-          <button onclick="openEditorForSelected()">Modifica paziente selezionato</button>
-          <button onclick="assignNextOrderToSelected()">Assegna settimana</button>
-          <button onclick="normalizeCurrentMonthOrders()">Controlla settimane 1-4</button>
-          <button onclick="exportJSON()">Esporta backup JSON</button>
-          <button onclick="document.getElementById('importFile').click()">Importa backup JSON</button>
-          <button class="ghost" onclick="resetCurrentMonthFilters()">Reset filtri</button>
-        </div>
-        <input id="importFile" type="file" accept=".json" class="hidden" onchange="importJSON(event)">
-        <div class="footer-note">La scheda paziente si apre in finestra dedicata, così su iPad e schermi stretti resta sempre leggibile.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px;">
-    <div class="card-body">
-      <h2>Ricerca e filtri</h2>
-      <div class="controls">
-        <input type="text" id="searchInput" placeholder="Cerca per nome, recapito, medico, patologia, note..." oninput="renderTable()">
-        <select id="filterCall" onchange="renderTable()">
-          <option value="">Tutte le chiamate</option>
-          <option>Non chiamato</option>
-          <option>Chiamato</option>
-          <option>Da richiamare</option>
-          <option>Non risponde</option>
-          <option>Rinuncia</option>
-        </select>
-        <select id="filterBooking" onchange="renderTable()">
-          <option value="">Tutte le prenotazioni</option>
-          <option>In lista</option>
-          <option>Prenotato</option>
-          <option>Da confermare</option>
-          <option>Eseguito</option>
-          <option>Annullato</option>
-        </select>
-        <select id="filterHasOrder" onchange="renderTable()">
-          <option value="">Ordine: tutti</option>
-          <option value="yes">Con ordine</option>
-          <option value="no">Senza ordine</option>
-        </select>
-        <select id="sortBy" onchange="renderTable()">
-          <option value="ordine">Ordina per settimana 1-4</option>
-          <option value="nome">Ordina per nome</option>
-          <option value="dataInserimento">Ordina per data inserimento</option>
-          <option value="dataEsame">Ordina per data esame</option>
-          <option value="ultimaChiamata">Ordina per ultima chiamata</option>
-        </select>
-        <select id="sortDir" onchange="renderTable()">
-          <option value="asc">Crescente</option>
-          <option value="desc">Decrescente</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div class="layout-main">
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Settimana di chiamata</th>
-              <th>Paziente</th>
-              <th>Recapito</th>
-              <th>Medico</th>
-              <th>Patologia</th>
-              <th>Data inserimento</th>
-              <th>Data esame</th>
-              <th>Stato chiamata</th>
-              <th>Ultima chiamata</th>
-              <th>Richiamo</th>
-              <th>Stato prenotazione</th>
-              <th>Note / esito</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="two-col">
+  <div class="container">
+    <div class="grid-top">
       <div class="card">
         <div class="card-body">
-          <h2>Scheda di prenotazione selezionata</h2>
-          <div class="small">Prima puoi visualizzare il paziente qui, poi aprire la modifica completa. La data esame è modificabile anche dalla scheda.</div>
-          <div id="selectedPatientView" class="empty-box" style="margin-top:12px;">Seleziona un paziente dalla tabella con “Visualizza” oppure “Modifica”.</div>
+          <h2>Panoramica mese</h2>
+          <div class="small">Scegli il mese e assegna tu la settimana di esecuzione: 1, 2, 3 o 4.</div>
+          <div id="monthTabs" class="tabs"></div>
+          <div class="kpis">
+            <div class="kpi"><div class="label">Totale pazienti</div><div class="value" id="kTotal">0</div></div>
+            <div class="kpi"><div class="label">Da chiamare</div><div class="value" id="kToCall">0</div></div>
+            <div class="kpi"><div class="label">Già chiamati</div><div class="value" id="kCalled">0</div></div>
+            <div class="kpi"><div class="label">Da richiamare</div><div class="value" id="kRecall">0</div></div>
+            <div class="kpi"><div class="label">Prenotati / eseguiti</div><div class="value" id="kBooked">0</div></div>
+          </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-body">
-          <h2>Comandi sul paziente selezionato</h2>
-          <div class="small">Usa questi pulsanti per lavorare rapidamente sulla scheda aperta.</div>
+          <h2>Azioni rapide</h2>
+          <div class="small">Le modifiche vengono salvate in Supabase.</div>
           <div class="btns">
-            <button class="primary" onclick="openEditorForSelected()">Apri scheda in modifica</button>
+            <button class="primary" onclick="addNewPatient()">Nuovo paziente</button>
+            <button onclick="openEditorForSelected()">Modifica paziente selezionato</button>
             <button onclick="assignNextOrderToSelected()">Assegna settimana</button>
-            <button class="good" onclick="quickRowCallSelected('Chiamato')">Segna “Chiamato”</button>
-            <button class="warn" onclick="quickRowCallSelected('Da richiamare')">Segna “Da richiamare”</button>
-            <button class="bad" onclick="quickRowCallSelected('Non risponde')">Segna “Non risponde”</button>
+            <button onclick="normalizeCurrentMonthOrders()">Controlla settimane 1-4</button>
+            <button onclick="exportJSON()">Esporta backup JSON</button>
+            <button class="ghost" onclick="resetCurrentMonthFilters()">Reset filtri</button>
           </div>
-          <div class="footer-note">Puoi anche inserire un nuovo paziente da zero cliccando “Nuovo paziente”.</div>
+          <div class="footer-note">La scheda paziente si apre in finestra dedicata.</div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div id="editorBackdrop" class="modal-backdrop" onclick="backdropClose(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
-    <div class="modal-header">
-      <div>
-        <h2 id="formTitle">Scheda paziente</h2>
-        <div class="small">Visualizza e modifica la scheda di prenotazione completa del paziente.</div>
-      </div>
-      <button class="ghost" onclick="closeEditor()">Chiudi</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div><label>Nome<input type="text" id="f_nome"></label></div>
-        <div><label>Recapito<input type="text" id="f_recapito"></label></div>
-        <div><label>Medico richiedente<input type="text" id="f_medico"></label></div>
-        <div><label>Settimana del mese (1-4)<input type="number" id="f_ordineChiamata" min="1" max="4" step="1" placeholder="1, 2, 3 o 4"></label></div>
-        <div class="full"><label>Patologia<input type="text" id="f_patologia"></label></div>
-        <div>
-          <label>Data inserimento<input type="text" id="f_dataInserimento" placeholder="automatica al nuovo inserimento"></label>
-        </div>
-        <div>
-          <label>Data esame (testo libero)<input type="text" id="f_dataEsame" placeholder="es. 19/03/2026"></label>
-        </div>
-        <div class="full">
-          <label>Modifica rapida data esame con calendario</label>
-          <div class="inline-row">
-            <input class="grow" type="date" id="f_dataEsamePicker">
-            <button type="button" class="slim" onclick="applyExamDatePicker()">Usa questa data</button>
-            <button type="button" class="slim ghost" onclick="clearExamDate()">Svuota</button>
-          </div>
-          <div class="footer-note">Il calendario compila automaticamente il campo “Data esame” nel formato gg/mm/aaaa.</div>
-        </div>
-        <div><label>Conferma<input type="text" id="f_conferma"></label></div>
-        <div><label>Stato chiamata
-          <select id="f_statoChiamata">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-body">
+        <h2>Ricerca e filtri</h2>
+        <div class="controls">
+          <input type="text" id="searchInput" placeholder="Cerca per nome, recapito, medico, patologia, note..." oninput="renderTable()">
+
+          <select id="filterCall" onchange="renderTable()">
+            <option value="">Tutte le chiamate</option>
             <option>Non chiamato</option>
             <option>Chiamato</option>
             <option>Da richiamare</option>
             <option>Non risponde</option>
             <option>Rinuncia</option>
           </select>
-        </label></div>
-        <div><label>Ultima chiamata<input type="text" id="f_ultimaChiamata" placeholder="es. 28/02/2026"></label></div>
-        <div><label>Prossimo richiamo<input type="text" id="f_prossimoRichiamo" placeholder="es. 03/03/2026"></label></div>
-        <div><label>Stato prenotazione
-          <select id="f_statoPrenotazione">
+
+          <select id="filterBooking" onchange="renderTable()">
+            <option value="">Tutte le prenotazioni</option>
             <option>In lista</option>
             <option>Prenotato</option>
             <option>Da confermare</option>
             <option>Eseguito</option>
             <option>Annullato</option>
           </select>
-        </label></div>
-        <div class="full"><label>Esito chiamata<input type="text" id="f_esitoChiamata" placeholder="es. conferma disponibilità, non risponde, richiama la prossima settimana"></label></div>
-        <div class="full"><label>Note cliniche / organizzative<textarea id="f_note"></textarea></label></div>
-        <div class="full"><label>Note telefonate<textarea id="f_noteChiamata"></textarea></label></div>
+
+          <select id="filterHasOrder" onchange="renderTable()">
+            <option value="">Ordine: tutti</option>
+            <option value="yes">Con ordine</option>
+            <option value="no">Senza ordine</option>
+          </select>
+
+          <select id="sortBy" onchange="renderTable()">
+            <option value="ordine">Ordina per settimana 1-4</option>
+            <option value="nome">Ordina per nome</option>
+            <option value="dataInserimento">Ordina per data inserimento</option>
+            <option value="dataEsame">Ordina per data esame</option>
+            <option value="ultimaChiamata">Ordina per ultima chiamata</option>
+          </select>
+
+          <select id="sortDir" onchange="renderTable()">
+            <option value="asc">Crescente</option>
+            <option value="desc">Decrescente</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-main">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Settimana</th>
+                <th>Paziente</th>
+                <th>Recapito</th>
+                <th>Medico</th>
+                <th>Patologia</th>
+                <th>Data inserimento</th>
+                <th>Data esame</th>
+                <th>Stato chiamata</th>
+                <th>Ultima chiamata</th>
+                <th>Richiamo</th>
+                <th>Stato prenotazione</th>
+                <th>Note / esito</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="sticky-actions">
-        <div class="btns">
-          <button class="primary" onclick="savePatient()">Salva scheda</button>
-          <button onclick="assignNextOrderToEditing()">Assegna settimana</button>
-          <button class="good" onclick="quickSetCall('Chiamato')">Segna “Chiamato”</button>
-          <button class="warn" onclick="quickSetCall('Da richiamare')">Segna “Da richiamare”</button>
-          <button class="bad" onclick="quickSetCall('Non risponde')">Segna “Non risponde”</button>
-          <button onclick="clearForm()">Nuova scheda vuota</button>
-          <button class="bad" onclick="deletePatient()">Elimina paziente</button>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-body">
+            <h2>Scheda di prenotazione selezionata</h2>
+            <div class="small">Visualizza qui il paziente selezionato.</div>
+            <div id="selectedPatientView" class="empty-box" style="margin-top:12px;">
+              Seleziona un paziente dalla tabella con “Visualizza” oppure “Modifica”.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h2>Comandi sul paziente selezionato</h2>
+            <div class="small">Usa questi pulsanti per lavorare rapidamente sulla scheda aperta.</div>
+            <div class="btns">
+              <button class="primary" onclick="openEditorForSelected()">Apri scheda in modifica</button>
+              <button onclick="assignNextOrderToSelected()">Assegna settimana</button>
+              <button class="good" onclick="quickRowCallSelected('Chiamato')">Segna “Chiamato”</button>
+              <button class="warn" onclick="quickRowCallSelected('Da richiamare')">Segna “Da richiamare”</button>
+              <button class="bad" onclick="quickRowCallSelected('Non risponde')">Segna “Non risponde”</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+  <div id="editorBackdrop" class="modal-backdrop" onclick="backdropClose(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="formTitle">Scheda paziente</h2>
+          <div class="small">Visualizza e modifica la scheda completa del paziente.</div>
+        </div>
+        <button class="ghost" onclick="closeEditor()">Chiudi</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div><label>Nome<input type="text" id="f_nome"></label></div>
+          <div><label>Recapito<input type="text" id="f_recapito"></label></div>
+          <div><label>Medico richiedente<input type="text" id="f_medico"></label></div>
+          <div><label>Settimana del mese (1-4)<input type="number" id="f_ordineChiamata" min="1" max="4" step="1"></label></div>
+          <div class="full"><label>Patologia<input type="text" id="f_patologia"></label></div>
+          <div><label>Data inserimento<input type="text" id="f_dataInserimento"></label></div>
+          <div><label>Data esame (testo libero)<input type="text" id="f_dataEsame" placeholder="es. 19/03/2026"></label></div>
+
+          <div class="full">
+            <label>Modifica rapida data esame con calendario</label>
+            <div class="inline-row">
+              <input class="grow" type="date" id="f_dataEsamePicker">
+              <button type="button" class="slim" onclick="applyExamDatePicker()">Usa questa data</button>
+              <button type="button" class="slim ghost" onclick="clearExamDate()">Svuota</button>
+            </div>
+          </div>
+
+          <div><label>Conferma<input type="text" id="f_conferma"></label></div>
+
+          <div>
+            <label>Stato chiamata
+              <select id="f_statoChiamata">
+                <option>Non chiamato</option>
+                <option>Chiamato</option>
+                <option>Da richiamare</option>
+                <option>Non risponde</option>
+                <option>Rinuncia</option>
+              </select>
+            </label>
+          </div>
+
+          <div><label>Ultima chiamata<input type="text" id="f_ultimaChiamata"></label></div>
+          <div><label>Prossimo richiamo<input type="text" id="f_prossimoRichiamo"></label></div>
+
+          <div>
+            <label>Stato prenotazione
+              <select id="f_statoPrenotazione">
+                <option>In lista</option>
+                <option>Prenotato</option>
+                <option>Da confermare</option>
+                <option>Eseguito</option>
+                <option>Annullato</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="full"><label>Esito chiamata<input type="text" id="f_esitoChiamata"></label></div>
+          <div class="full"><label>Note cliniche / organizzative<textarea id="f_note"></textarea></label></div>
+          <div class="full"><label>Note telefonate<textarea id="f_noteChiamata"></textarea></label></div>
+        </div>
+
+        <div class="sticky-actions">
+          <div class="btns">
+            <button class="primary" onclick="savePatient()">Salva scheda</button>
+            <button onclick="assignNextOrderToEditing()">Assegna settimana</button>
+            <button class="good" onclick="quickSetCall('Chiamato')">Segna “Chiamato”</button>
+            <button class="warn" onclick="quickSetCall('Da richiamare')">Segna “Da richiamare”</button>
+            <button class="bad" onclick="quickSetCall('Non risponde')">Segna “Non risponde”</button>
+            <button onclick="clearForm()">Nuova scheda vuota</button>
+            <button class="bad" onclick="deletePatient()">Elimina paziente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-
-const emptyData = {
-  Gennaio: [], Febbraio: [], Marzo: [], Aprile: [],
-  Maggio: [], Giugno: [], Luglio: [], Agosto: [],
-  Settembre: [], Ottobre: [], Novembre: [], Dicembre: []
-};
-
 const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+
+const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+function emptyMonthMap() {
+  return {
+    Gennaio: [], Febbraio: [], Marzo: [], Aprile: [],
+    Maggio: [], Giugno: [], Luglio: [], Agosto: [],
+    Settembre: [], Ottobre: [], Novembre: [], Dicembre: []
+  };
+}
 
 let state = {
   currentMonth: "Gennaio",
   editingId: null,
   selectedId: null,
-  data: structuredClone(emptyData)
+  data: emptyMonthMap()
 };
-
-function structuredClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
 
 function textValue(v) {
   return (v ?? "").toString().trim();
@@ -392,7 +430,7 @@ function isoFromDisplayDate(value) {
   const t = textValue(value);
   const m = t.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})$/);
   if (!m) return "";
-  return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
 }
 
 function orderNum(p) {
@@ -427,19 +465,22 @@ function orderBadge(value) {
 function renderTabs() {
   const el = document.getElementById("monthTabs");
   el.innerHTML = months.map(m => {
-    const count = state.data[m].length;
-    return `<button class="tab ${m === state.currentMonth ? 'active' : ''}" onclick="selectMonth('${m}')">${m} (${count})</button>`;
+    const count = state.data[m]?.length || 0;
+    return `<button class="tab ${m === state.currentMonth ? "active" : ""}" onclick="selectMonth('${m}')">${m} (${count})</button>`;
   }).join("");
 }
 
 function selectMonth(month) {
   state.currentMonth = month;
-  const arr = state.data[month];
+  const arr = state.data[month] || [];
   if (state.selectedId && !arr.some(p => p.id === state.selectedId)) state.selectedId = null;
   if (state.editingId && !arr.some(p => p.id === state.editingId)) state.editingId = null;
-  clearForm();
   renderTable();
   renderSelectedPatient();
+}
+
+function findPatient(id) {
+  return (state.data[state.currentMonth] || []).find(p => p.id === id);
 }
 
 function filteredRows() {
@@ -450,42 +491,54 @@ function filteredRows() {
   const sortBy = document.getElementById("sortBy").value;
   const sortDir = document.getElementById("sortDir").value;
 
-  let rows = state.data[state.currentMonth].filter(p => {
-    const blob = [p.nome,p.recapito,p.medico,p.patologia,p.note,p.noteChiamata,p.esitoChiamata,p.dataInserimento,p.dataEsame].join(" ").toLowerCase();
+  let rows = (state.data[state.currentMonth] || []).filter(p => {
+    const blob = [
+      p.nome, p.recapito, p.medico, p.patologia,
+      p.note, p.noteChiamata, p.esitoChiamata,
+      p.dataInserimento, p.dataEsame
+    ].join(" ").toLowerCase();
+
     if (search && !blob.includes(search)) return false;
     if (filterCall && textValue(p.statoChiamata) !== filterCall) return false;
     if (filterBooking && textValue(p.statoPrenotazione) !== filterBooking) return false;
+
     const hasOrder = Number.isFinite(Number(textValue(p.ordineChiamata))) && Number(textValue(p.ordineChiamata)) > 0;
     if (filterHasOrder === "yes" && !hasOrder) return false;
     if (filterHasOrder === "no" && hasOrder) return false;
+
     return true;
   });
 
   rows.sort((a,b) => {
     let cmp = 0;
-    if (sortBy === "ordine") cmp = orderNum(a) - orderNum(b) || textValue(a.nome).localeCompare(textValue(b.nome), 'it');
-    else if (sortBy === "nome") cmp = textValue(a.nome).localeCompare(textValue(b.nome), 'it');
+    if (sortBy === "ordine") cmp = orderNum(a) - orderNum(b) || textValue(a.nome).localeCompare(textValue(b.nome), "it");
+    else if (sortBy === "nome") cmp = textValue(a.nome).localeCompare(textValue(b.nome), "it");
     else {
       const av = parseDateToSortable(a[sortBy]) ?? Number.MAX_SAFE_INTEGER;
       const bv = parseDateToSortable(b[sortBy]) ?? Number.MAX_SAFE_INTEGER;
-      cmp = av - bv || textValue(a.nome).localeCompare(textValue(b.nome), 'it');
+      cmp = av - bv || textValue(a.nome).localeCompare(textValue(b.nome), "it");
     }
     return sortDir === "desc" ? -cmp : cmp;
   });
+
   return rows;
 }
 
 function renderTable() {
   const rows = filteredRows();
   const tbody = document.getElementById("tableBody");
+
   tbody.innerHTML = rows.map(p => {
     const notes = [textValue(p.esitoChiamata), textValue(p.note), textValue(p.noteChiamata)].filter(Boolean).join(" • ");
-    const selected = state.selectedId === p.id ? ' style="background:#f8fbff;"' : '';
+    const selected = state.selectedId === p.id ? ' style="background:#f8fbff;"' : "";
+
     return `<tr${selected}>
       <td>
         <div class="order-box">
           ${orderBadge(p.ordineChiamata)}
-          <input class="order-input" type="number" min="1" max="4" value="${escapeHtml(textValue(p.ordineChiamata))}" onchange="setOrder('${p.id}', this.value)">
+          <input class="order-input" type="number" min="1" max="4"
+            value="${escapeHtml(textValue(p.ordineChiamata))}"
+            onchange="setOrder('${p.id}', this.value)">
         </div>
       </td>
       <td><strong>${escapeHtml(textValue(p.nome))}</strong></td>
@@ -515,11 +568,12 @@ function renderTable() {
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="13" class="small" style="padding:18px;">Nessun paziente trovato con i filtri correnti.</td></tr>`;
   }
+
   updateKPIs();
 }
 
 function updateKPIs() {
-  const all = state.data[state.currentMonth];
+  const all = state.data[state.currentMonth] || [];
   document.getElementById("kTotal").textContent = all.length;
   document.getElementById("kToCall").textContent = all.filter(p => textValue(p.statoChiamata) === "" || textValue(p.statoChiamata) === "Non chiamato").length;
   document.getElementById("kCalled").textContent = all.filter(p => textValue(p.statoChiamata) === "Chiamato").length;
@@ -528,18 +582,16 @@ function updateKPIs() {
   renderTabs();
 }
 
-function findPatient(id) {
-  return state.data[state.currentMonth].find(p => p.id === id);
-}
-
 function renderSelectedPatient() {
   const box = document.getElementById("selectedPatientView");
   const p = state.selectedId ? findPatient(state.selectedId) : null;
+
   if (!p) {
     box.className = "empty-box";
     box.innerHTML = "Seleziona un paziente dalla tabella con “Visualizza” oppure “Modifica”.";
     return;
   }
+
   box.className = "";
   box.innerHTML = `
     <div class="details-grid">
@@ -605,9 +657,10 @@ function clearExamDate() {
 function clearForm(resetEditing = true) {
   if (resetEditing) state.editingId = null;
   document.getElementById("formTitle").textContent = state.editingId ? "Modifica scheda paziente" : "Nuova scheda paziente";
-  ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k => {
-    document.getElementById("f_" + k).value = "";
-  });
+
+  ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"]
+    .forEach(k => document.getElementById("f_" + k).value = "");
+
   document.getElementById("f_dataInserimento").value = todayString();
   document.getElementById("f_dataEsamePicker").value = "";
   document.getElementById("f_statoChiamata").value = "Non chiamato";
@@ -624,12 +677,14 @@ function addNewPatient() {
 function editPatient(id) {
   const p = findPatient(id);
   if (!p) return;
+
   state.selectedId = id;
   state.editingId = id;
   document.getElementById("formTitle").textContent = "Modifica scheda paziente";
-  ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k => {
-    document.getElementById("f_" + k).value = textValue(p[k]);
-  });
+
+  ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"]
+    .forEach(k => document.getElementById("f_" + k).value = textValue(p[k]));
+
   document.getElementById("f_statoChiamata").value = textValue(p.statoChiamata) || "Non chiamato";
   document.getElementById("f_statoPrenotazione").value = textValue(p.statoPrenotazione) || "In lista";
   syncExamDatePickerFromText();
@@ -647,7 +702,7 @@ function openEditorForSelected() {
 }
 
 function nextId() {
-  const all = months.flatMap(m => state.data[m]);
+  const all = months.flatMap(m => state.data[m] || []);
   let max = 0;
   all.forEach(p => {
     const n = Number(String(p.id || "").replace("P",""));
@@ -656,29 +711,38 @@ function nextId() {
   return "P" + String(max + 1).padStart(4,"0");
 }
 
+function supabaseHeaders(withPrefer = false) {
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY,
+    "Content-Type": "application/json"
+  };
+  if (withPrefer) headers["Prefer"] = "return=representation";
+  return headers;
+}
+
 async function caricaPazienti() {
   try {
     const res = await fetch(
       SUPABASE_URL + "/rest/v1/pazienti_tcp?select=*",
       {
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json"
-        }
+        method: "GET",
+        headers: supabaseHeaders(false)
       }
     );
 
-    const data = await res.json();
-
     if (!res.ok) {
-      throw new Error(typeof data === "string" ? data : "Errore caricamento Supabase");
+      const errText = await res.text();
+      throw new Error(errText || "Errore lettura Supabase");
     }
+
+    const data = await res.json();
 
     if (!Array.isArray(data)) {
       throw new Error("Risposta Supabase non valida");
     }
 
-    const grouped = structuredClone(emptyData);
+    const grouped = emptyMonthMap();
 
     data.forEach(row => {
       const mese = textValue(row.mese);
@@ -739,32 +803,31 @@ async function savePatient() {
       SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(payload.id),
       {
         method: "PATCH",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json",
-          "Prefer": "return=representation"
-        },
+        headers: supabaseHeaders(true),
         body: JSON.stringify(payload)
       }
     );
 
     if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      throw new Error(errText || "Errore PATCH");
+    }
+
+    const patchedRows = await patchRes.json();
+
+    if (!Array.isArray(patchedRows) || patchedRows.length === 0) {
       const insertRes = await fetch(
         SUPABASE_URL + "/rest/v1/pazienti_tcp",
         {
           method: "POST",
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-          },
+          headers: supabaseHeaders(true),
           body: JSON.stringify(payload)
         }
       );
 
       if (!insertRes.ok) {
         const errText = await insertRes.text();
-        throw new Error(errText || "Errore salvataggio su Supabase");
+        throw new Error(errText || "Errore INSERT");
       }
     }
 
@@ -791,16 +854,13 @@ async function deletePatient() {
       SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(state.editingId),
       {
         method: "DELETE",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json"
-        }
+        headers: supabaseHeaders(false)
       }
     );
 
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || "Errore eliminazione");
+      const errText = await res.text();
+      throw new Error(errText || "Errore eliminazione");
     }
 
     state.selectedId = null;
@@ -833,46 +893,35 @@ async function setOrder(id, value) {
       SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(id),
       {
         method: "PATCH",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json",
-          "Prefer": "return=representation"
-        },
+        headers: supabaseHeaders(true),
         body: JSON.stringify({ ordineChiamata: ordine })
       }
     );
 
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || "Errore aggiornamento settimana");
+      const errText = await res.text();
+      throw new Error(errText || "Errore aggiornamento settimana");
     }
 
     await caricaPazienti();
 
-    if (state.editingId === id) {
-      editPatient(id);
-    } else if (state.selectedId === id) {
-      renderSelectedPatient();
-    }
+    if (state.editingId === id) editPatient(id);
+    else if (state.selectedId === id) renderSelectedPatient();
   } catch (e) {
     alert("Errore settimana: " + e.message);
   }
 }
 
-async function normalizeCurrentMonthOrders() {
-  const arr = state.data[state.currentMonth];
-  for (const p of arr) {
+function normalizeCurrentMonthOrders() {
+  const arr = state.data[state.currentMonth] || [];
+  arr.forEach(async p => {
     const raw = textValue(p.ordineChiamata);
-    let ordine = "";
-    if (raw) {
-      let n = Number(raw);
-      if (Number.isFinite(n)) ordine = String(Math.min(4, Math.max(1, Math.round(n))));
-    }
-    if (ordine !== textValue(p.ordineChiamata)) {
-      await setOrder(p.id, ordine);
-    }
-  }
-  await caricaPazienti();
+    if (!raw) return;
+    let n = Number(raw);
+    if (!Number.isFinite(n)) n = "";
+    else n = Math.min(4, Math.max(1, Math.round(n)));
+    await setOrder(p.id, n ? String(n) : "");
+  });
 }
 
 function movePatient(id, delta) {
@@ -887,7 +936,7 @@ function movePatient(id, delta) {
 }
 
 function getNextManualOrder() {
-  const arr = state.data[state.currentMonth];
+  const arr = state.data[state.currentMonth] || [];
   const nums = new Set(arr.map(p => Number(textValue(p.ordineChiamata))).filter(n => Number.isFinite(n) && n >= 1 && n <= 4));
   for (let i = 1; i <= 4; i++) {
     if (!nums.has(i)) return i;
@@ -911,17 +960,17 @@ async function quickRowCall(id, status) {
   const p = findPatient(id);
   if (!p) return;
 
-  const payload = {
+  const patch = {
     statoChiamata: status,
     ultimaChiamata: todayString()
   };
 
   if (status === "Da richiamare" && !textValue(p.prossimoRichiamo)) {
-    payload.prossimoRichiamo = todayString();
+    patch.prossimoRichiamo = todayString();
   }
 
   if (status === "Chiamato" && textValue(p.statoPrenotazione) === "In lista") {
-    payload.statoPrenotazione = "Da confermare";
+    patch.statoPrenotazione = "Da confermare";
   }
 
   try {
@@ -929,27 +978,21 @@ async function quickRowCall(id, status) {
       SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(id),
       {
         method: "PATCH",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json",
-          "Prefer": "return=representation"
-        },
-        body: JSON.stringify(payload)
+        headers: supabaseHeaders(true),
+        body: JSON.stringify(patch)
       }
     );
 
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || "Errore aggiornamento stato chiamata");
+      const errText = await res.text();
+      throw new Error(errText || "Errore aggiornamento stato");
     }
 
     state.selectedId = id;
     await caricaPazienti();
-
-    if (state.editingId === id) editPatient(id);
-    else renderSelectedPatient();
+    renderSelectedPatient();
   } catch (e) {
-    alert("Errore chiamata: " + e.message);
+    alert("Errore stato chiamata: " + e.message);
   }
 }
 
@@ -966,9 +1009,6 @@ function quickSetCall(status) {
   document.getElementById("f_ultimaChiamata").value = todayString();
   if (status === "Da richiamare" && !textValue(document.getElementById("f_prossimoRichiamo").value)) {
     document.getElementById("f_prossimoRichiamo").value = todayString();
-  }
-  if (status === "Chiamato" && textValue(document.getElementById("f_statoPrenotazione").value) === "In lista") {
-    document.getElementById("f_statoPrenotazione").value = "Da confermare";
   }
 }
 
@@ -989,30 +1029,6 @@ function exportJSON() {
   a.download = "backup_tcp_2026_v7.json";
   a.click();
   URL.revokeObjectURL(a.href);
-}
-
-function importJSON(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const parsed = JSON.parse(reader.result);
-      months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
-      state.data = parsed;
-      state.selectedId = null;
-      state.editingId = null;
-      renderTable();
-      renderSelectedPatient();
-      clearForm();
-      closeEditor();
-      alert("JSON importato solo in memoria. Per salvarlo online devi reinserire o sviluppare un import su Supabase.");
-    } catch (e) {
-      alert("Il file JSON non è valido.");
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = "";
 }
 
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
