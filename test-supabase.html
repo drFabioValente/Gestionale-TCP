@@ -1,18 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Supabase REST</title>
+</head>
 <body>
+  <h1>TEST SUPABASE REST</h1>
+  <button onclick="carica()">Carica pazienti</button>
+  <pre id="out">Pronto.</pre>
 
-<h1>TEST JS</h1>
+  <script>
+    const out = document.getElementById("out");
 
-<button onclick="test()">Clicca</button>
+    const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
 
-<p id="out">Pronto.</p>
+    async function carica() {
+      out.textContent = "Richiesta in corso...";
 
-<script>
-function test() {
-  document.getElementById("out").innerText = "FUNZIONA";
-}
-</script>
+      try {
+        const res = await fetch(
+          SUPABASE_URL + "/rest/v1/pazienti_tcp?select=id,mese,nome&limit=10",
+          {
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Content-Type": "application/json"
+            }
+          }
+        );
 
+        const text = await res.text();
+
+        out.textContent =
+          "HTTP " + res.status + "\n\n" + text;
+      } catch (e) {
+        out.textContent = "Errore JS: " + e.message;
+      }
+    }
+  </script>
 </body>
 </html>
