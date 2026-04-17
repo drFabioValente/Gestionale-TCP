@@ -756,23 +756,44 @@ async function savePatient() {
 }
 
 function deletePatient() {
+ <script>
+async function deletePatient() {
   if (!state.editingId) {
     alert("Apri prima una scheda paziente.");
     return;
   }
-  const arr = state.data[state.currentMonth];
-  const idx = arr.findIndex(p => p.id === state.editingId);
-  if (idx < 0) return;
-  if (!confirm("Eliminare questo paziente dalla lista del mese corrente?")) return;
-  arr.splice(idx,1);
-  if (state.selectedId === state.editingId) state.selectedId = null;
-  state.editingId = null;
-  normalizeCurrentMonthOrders(false);
-  saveState();
-  clearForm();
-  closeEditor();
-  renderTable();
-  renderSelectedPatient();
+
+  if (!confirm("Eliminare questo paziente dalla lista?")) return;
+
+  try {
+    const res = await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(state.editingId),
+      {
+        method: "DELETE",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || "Errore eliminazione");
+    }
+
+    state.selectedId = null;
+    state.editingId = null;
+
+    await caricaPazienti();
+    clearForm();
+    closeEditor();
+
+  } catch (e) {
+    alert("Errore eliminazione: " + e.message);
+  }
+}
+</script>;
 }
 
 function setOrder(id, value) {
