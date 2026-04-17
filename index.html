@@ -666,9 +666,6 @@ function nextId() {
   });
   return "P" + String(max + 1).padStart(4,"0");
 }
-
-function savePatient() {
-  <script>
 async function savePatient() {
   const examText = textValue(document.getElementById("f_dataEsame").value);
   const pickerValue = textValue(document.getElementById("f_dataEsamePicker").value);
@@ -754,9 +751,6 @@ async function savePatient() {
 }
 </script>
 }
-
-function deletePatient() {
- <script>
 async function deletePatient() {
   if (!state.editingId) {
     alert("Apri prima una scheda paziente.");
@@ -795,9 +789,6 @@ async function deletePatient() {
 }
 </script>;
 }
-
-function setOrder(id, value) {
- <script>
 async function setOrder(id, value) {
   const p = findPatient(id);
   if (!p) return;
