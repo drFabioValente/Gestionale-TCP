@@ -1,59 +1,18 @@
 <!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Test Supabase</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+<html>
 <body>
-  <h1>Test Supabase</h1>
-  <button id="btn">Carica pazienti</button>
-  <pre id="out">Pronto.</pre>
 
-  <script>
-    const out = document.getElementById("out");
+<h1>TEST JS</h1>
 
-    function log(msg) {
-      out.textContent = msg;
-    }
+<button onclick="test()">Clicca</button>
 
-    log("Script caricato.");
+<p id="out">Pronto.</p>
 
-    const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
-    const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+<script>
+function test() {
+  document.getElementById("out").innerText = "FUNZIONA";
+}
+</script>
 
-    let supabase = null;
-
-    try {
-      if (!window.supabase || !window.supabase.createClient) {
-        throw new Error("Libreria Supabase non caricata");
-      }
-      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-      log("Client Supabase creato. Premi il pulsante.");
-    } catch (e) {
-      log("Errore iniziale: " + e.message);
-    }
-
-    document.getElementById("btn").addEventListener("click", async function () {
-      log("Click ricevuto. Provo a leggere da Supabase...");
-
-      try {
-        const { data, error } = await supabase
-          .from("pazienti_tcp")
-          .select("id,mese,nome")
-          .limit(10);
-
-        if (error) {
-          log("Errore Supabase: " + error.message);
-          return;
-        }
-
-        log(JSON.stringify(data, null, 2));
-      } catch (e) {
-        log("Errore JS: " + e.message);
-      }
-    });
-  </script>
 </body>
 </html>
