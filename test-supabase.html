@@ -12,32 +12,133 @@
 
   <script>
     const out = document.getElementById("out");
+<script>
+const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
 
-    const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
-
-    async function carica() {
-      out.textContent = "Richiesta in corso...";
-
-      try {
-        const res = await fetch(
-          SUPABASE_URL + "/rest/v1/pazienti_tcp?select=id,mese,nome&limit=10",
-          {
-            headers: {
-              "apikey": SUPABASE_KEY,
-              "Content-Type": "application/json"
-            }
-          }
-        );
-
-        const text = await res.text();
-
-        out.textContent =
-          "HTTP " + res.status + "\n\n" + text;
-      } catch (e) {
-        out.textContent = "Errore JS: " + e.message;
+async function caricaPazienti() {
+  try {
+    const res = await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?select=*",
+      {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
+        }
       }
+    );
+
+    const data = await res.json();
+
+    const grouped = {
+      Gennaio: [], Febbraio: [], Marzo: [], Aprile: [],
+      Maggio: [], Giugno: [], Luglio: [], Agosto: [],
+      Settembre: [], Ottobre: [], Novembre: [], Dicembre: []
+    };
+
+    data.forEach(row => {
+      if (grouped[row.mese]) grouped[row.mese].push(row);
+    });
+
+    state.data = grouped;
+
+    renderTabs();
+    renderTable();
+    renderSelectedPatient();
+
+  } catch (e) {
+    alert("Errore Supabase: " + e.message);
+  }
+}
+
+async function savePatient() {
+  const payload = {
+    id: state.editingId || nextId(),
+    mese: state.currentMonth,
+    nome: document.getElementById("f_nome").value.trim(),
+    recapito: document.getElementById("f_recapito").value.trim(),
+    medico: document.getElementById("f_medico").value.trim(),
+    ordineChiamata: document.getElementById("f_ordineChiamata").value,
+    patologia: document.getElementById("f_patologia").value.trim(),
+    dataInserimento: document.getElementById("f_dataInserimento").value,
+    dataEsame: document.getElementById("f_dataEsame").value,
+    conferma: document.getElementById("f_conferma").value,
+    statoChiamata: document.getElementById("f_statoChiamata").value,
+    ultimaChiamata: document.getElementById("f_ultimaChiamata").value,
+    prossimoRichiamo: document.getElementById("f_prossimoRichiamo").value,
+    esitoChiamata: document.getElementById("f_esitoChiamata").value,
+    note: document.getElementById("f_note").value,
+    noteChiamata: document.getElementById("f_noteChiamata").value,
+    statoPrenotazione: document.getElementById("f_statoPrenotazione").value
+  };
+
+  if (!payload.nome) {
+    alert("Inserisci almeno il nome");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + payload.id,
+      {
+        method: "PATCH",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!res.ok) {
+      const insertRes = await fetch(
+        SUPABASE_URL + "/rest/v1/pazienti_tcp",
+        {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!insertRes.ok) throw new Error("Errore inserimento");
     }
-  </script>
-</body>
-</html>
+
+    alert("Salvato ✅");
+
+    await caricaPazienti();
+
+  } catch (e) {
+    alert("Errore: " + e.message);
+  }
+}
+
+async function deletePatient() {
+  if (!state.editingId) return;
+
+  if (!confirm("Eliminare paziente?")) return;
+
+  try {
+    await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + state.editingId,
+      {
+        method: "DELETE",
+        headers: {
+          "apikey": SUPABASE_KEY
+        }
+      }
+    );
+
+    alert("Eliminato");
+    await caricaPazienti();
+
+  } catch (e) {
+    alert("Errore: " + e.message);
+  }
+}
+
+caricaPazienti();
+</script>
