@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Supabase</h1>
+  <button id="btn">Carica pazienti</button>
+  <pre id="out">Pronto.</pre>
+
+  <script>
+    const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+    const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+    const out = document.getElementById("out");
+
+    let supabase;
+    try {
+      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      out.textContent = "Client Supabase creato.";
+    } catch (e) {
+      out.textContent = "Errore creazione client: " + e.message;
+    }
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      out.textContent = "Lettura da Supabase in corso...";
+      try {
+        const { data, error } = await supabase
+          .from("pazienti_tcp")
+          .select("id,mese,nome")
+          .limit(10);
+
+        if (error) {
+          out.textContent = "Errore Supabase: " + error.message;
+          return;
+        }
+
+        out.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        out.textContent = "Errore JS: " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
