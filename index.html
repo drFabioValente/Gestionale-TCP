@@ -883,4 +883,32 @@ renderTable();
 renderSelectedPatient();
 </script>
 </body>
+  <script>
+const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+const SUPABASE_KEY = "INCOLLA_LA_TUA_CHIAVE";
+
+async function caricaPazienti() {
+  try {
+    const res = await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?select=*",
+      {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const data = await res.json();
+    console.log(data);
+
+    // 👉 temporaneo: stampa in console
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// 👉 fai partire al caricamento pagina
+caricaPazienti();
+</script>
 </html>
