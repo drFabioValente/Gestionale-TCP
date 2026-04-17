@@ -885,7 +885,7 @@ renderSelectedPatient();
 </body>
   <script>
 const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
-const SUPABASE_KEY = "INCOLLA_LA_TUA_CHIAVE";
+const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
 
 async function caricaPazienti() {
   try {
@@ -900,7 +900,8 @@ async function caricaPazienti() {
     );
 
     const data = await res.json();
-    console.log(data);
+    alert("Pazienti da Supabase: " + data.length);
+document.getElementById("kTotal").textContent = data.length;;
 
     // 👉 temporaneo: stampa in console
   } catch (e) {
