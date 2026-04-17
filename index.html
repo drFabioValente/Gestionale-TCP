@@ -668,18 +668,24 @@ function nextId() {
 }
 
 function savePatient() {
+  <script>
+async function savePatient() {
   const examText = textValue(document.getElementById("f_dataEsame").value);
   const pickerValue = textValue(document.getElementById("f_dataEsamePicker").value);
   let ordine = textValue(document.getElementById("f_ordineChiamata").value);
+
   if (ordine) {
     let n = Number(ordine);
     if (!Number.isFinite(n)) n = "";
     else n = Math.min(4, Math.max(1, Math.round(n)));
     ordine = n ? String(n) : "";
   }
+
   const isNewPatient = !state.editingId;
+
   const payload = {
     id: state.editingId || nextId(),
+    mese: state.currentMonth,
     nome: textValue(document.getElementById("f_nome").value),
     recapito: textValue(document.getElementById("f_recapito").value),
     medico: textValue(document.getElementById("f_medico").value),
@@ -696,20 +702,57 @@ function savePatient() {
     noteChiamata: textValue(document.getElementById("f_noteChiamata").value),
     statoPrenotazione: textValue(document.getElementById("f_statoPrenotazione").value) || "In lista"
   };
+
   if (!payload.nome) {
     alert("Inserisci almeno il nome del paziente.");
     return;
   }
-  const arr = state.data[state.currentMonth];
-  const idx = arr.findIndex(p => p.id === payload.id);
-  if (idx >= 0) arr[idx] = payload;
-  else arr.push(payload);
-  state.editingId = payload.id;
-  state.selectedId = payload.id;
-  saveState();
-  renderTable();
-  renderSelectedPatient();
-  editPatient(payload.id);
+
+  try {
+    const res = await fetch(
+      SUPABASE_URL + "/rest/v1/pazienti_tcp?id=eq." + encodeURIComponent(payload.id),
+      {
+        method: "PATCH",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!res.ok) {
+      const insertRes = await fetch(
+        SUPABASE_URL + "/rest/v1/pazienti_tcp",
+        {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!insertRes.ok) {
+        const errText = await insertRes.text();
+        throw new Error(errText || "Errore salvataggio su Supabase");
+      }
+    }
+
+    state.editingId = payload.id;
+    state.selectedId = payload.id;
+
+    await caricaPazienti();
+    editPatient(payload.id);
+
+  } catch (e) {
+    alert("Errore salvataggio: " + e.message);
+  }
+}
+</script>
 }
 
 function deletePatient() {
