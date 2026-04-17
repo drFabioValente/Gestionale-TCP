@@ -882,9 +882,7 @@ renderTabs();
 renderTable();
 renderSelectedPatient();
 </script>
-</body>
-  <script>
-const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+  const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
 
 async function caricaPazienti() {
@@ -895,6 +893,8 @@ async function caricaPazienti() {
         headers: {
           "apikey": SUPABASE_KEY,
           "Content-Type": "application/json"
+</body>
+  <script>
         }
       }
     );
