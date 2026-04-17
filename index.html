@@ -882,8 +882,10 @@ renderTabs();
 renderTable();
 renderSelectedPatient();
 </script>
-  const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
-const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+<script>
+<script>
+const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";";
 
 async function caricaPazienti() {
   try {
@@ -893,23 +895,17 @@ async function caricaPazienti() {
         headers: {
           "apikey": SUPABASE_KEY,
           "Content-Type": "application/json"
-</body>
-  <script>
         }
       }
     );
 
     const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error("Risposta Supabase non valida");
+    }
+
     alert("Pazienti da Supabase: " + data.length);
-document.getElementById("kTotal").textContent = data.length;;
 
-    // 👉 temporaneo: stampa in console
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-// 👉 fai partire al caricamento pagina
-caricaPazienti();
-</script>
-</html>
+    const grouped = {};
+    const mesi = ["Gennaio","Febbraio","Mar
