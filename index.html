@@ -15,6 +15,18 @@
     html, body { margin:0; padding:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
     body.modal-open { overflow:hidden; }
 
+    #loginScreen {
+      position:fixed; inset:0; z-index:9999; background:#0f172a;
+      display:flex; align-items:center; justify-content:center; padding:20px;
+    }
+    .login-box {
+      width:min(360px, 100%); background:#fff; border-radius:18px; padding:28px;
+      box-shadow:0 24px 64px rgba(0,0,0,.35); text-align:center;
+    }
+    .login-box h2 { margin:0 0 8px; }
+    .login-box input { margin-top:14px; }
+    .login-error { color:#991b1b; display:none; margin-top:12px; font-weight:700; }
+
     header {
       position:sticky; top:0; z-index:40;
       background:linear-gradient(135deg,#eff6ff,#f8fafc 60%,#eef2ff);
@@ -56,12 +68,12 @@
     button.ghost { background:#fff; }
     button.slim { padding:7px 10px; border-radius:10px; }
 
-    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    input[type="text"], input[type="password"], input[type="number"], input[type="date"], select, textarea {
       width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; background:#fff;
     }
     textarea { min-height:86px; resize:vertical; }
 
-    .controls { display:grid; grid-template-columns:1.2fr .8fr .8fr .7fr .8fr .7fr; gap:10px; }
+    .controls { display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:10px; }
     .layout-main { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
     .table-wrap { overflow:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radius); }
     table { width:100%; border-collapse:collapse; min-width:1320px; }
@@ -148,24 +160,25 @@
   </style>
 </head>
 <body>
-  <script>
-  const PASSWORD = "tcp2026";
+  <div id="loginScreen">
+    <div class="login-box">
+      <h2>Accesso gestionale</h2>
+      <div class="small">Inserisci la password per continuare.</div>
+      <input id="passwordInput" type="password" placeholder="Password" onkeydown="if(event.key === 'Enter') checkPassword()">
+      <button class="primary" style="width:100%; margin-top:14px;" onclick="checkPassword()">Entra</button>
+      <div id="loginError" class="login-error">Password errata</div>
+    </div>
+  </div>
 
-  const entered = prompt("Inserisci password");
-
-  if (entered !== PASSWORD) {
-    document.write("<h1>Accesso negato</h1>");
-    throw new Error("Accesso negato");
-  }
-</script>
   <header>
     <h1>Gestione Lista TCP 2026</h1>
     <div class="small">
       Priorità di chiamata solo manuale. In questa versione puoi
       <strong>visualizzare la scheda di prenotazione</strong>,
       <strong>modificare la scheda del paziente</strong>,
-      <strong>inserire nuovi pazienti</strong> e
-      <strong>cambiare la data dell'esame</strong>.
+      <strong>inserire nuovi pazienti</strong>,
+      <strong>spostare un paziente in un altro mese</strong>
+      e <strong>cambiare la data dell'esame</strong>.
     </div>
   </header>
 
@@ -225,25 +238,6 @@
             <option>Da confermare</option>
             <option>Eseguito</option>
             <option>Annullato</option>
-          </select>
-
-          <select id="filterHasOrder" onchange="renderTable()">
-            <option value="">Ordine: tutti</option>
-            <option value="yes">Con ordine</option>
-            <option value="no">Senza ordine</option>
-          </select>
-
-          <select id="sortBy" onchange="renderTable()">
-            <option value="ordine">Ordina per settimana 1-4</option>
-            <option value="nome">Ordina per nome</option>
-            <option value="dataInserimento">Ordina per data inserimento</option>
-            <option value="dataEsame">Ordina per data esame</option>
-            <option value="ultimaChiamata">Ordina per ultima chiamata</option>
-          </select>
-
-          <select id="sortDir" onchange="renderTable()">
-            <option value="asc">Crescente</option>
-            <option value="desc">Decrescente</option>
           </select>
         </div>
       </div>
@@ -319,6 +313,26 @@
           <div><label>Recapito<input type="text" id="f_recapito"></label></div>
           <div><label>Medico richiedente<input type="text" id="f_medico"></label></div>
           <div><label>Settimana del mese (1-4)<input type="number" id="f_ordineChiamata" min="1" max="4" step="1"></label></div>
+
+          <div>
+            <label>Mese
+              <select id="f_mese">
+                <option>Gennaio</option>
+                <option>Febbraio</option>
+                <option>Marzo</option>
+                <option>Aprile</option>
+                <option>Maggio</option>
+                <option>Giugno</option>
+                <option>Luglio</option>
+                <option>Agosto</option>
+                <option>Settembre</option>
+                <option>Ottobre</option>
+                <option>Novembre</option>
+                <option>Dicembre</option>
+              </select>
+            </label>
+          </div>
+
           <div class="full"><label>Patologia<input type="text" id="f_patologia"></label></div>
           <div><label>Data inserimento<input type="text" id="f_dataInserimento"></label></div>
           <div><label>Data esame (testo libero)<input type="text" id="f_dataEsame" placeholder="es. 19/03/2026"></label></div>
@@ -382,6 +396,7 @@
   </div>
 
 <script>
+const APP_PASSWORD = "1234";
 const SUPABASE_URL = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
 
@@ -401,6 +416,33 @@ let state = {
   selectedId: null,
   data: emptyMonthMap()
 };
+
+let appStarted = false;
+
+function checkPassword() {
+  const input = document.getElementById("passwordInput");
+  const error = document.getElementById("loginError");
+  const val = input.value;
+
+  if (val === APP_PASSWORD) {
+    sessionStorage.setItem("tcp_logged_in", "yes");
+    document.getElementById("loginScreen").style.display = "none";
+    startApp();
+  } else {
+    error.style.display = "block";
+    input.value = "";
+    input.focus();
+  }
+}
+
+function startApp() {
+  if (appStarted) return;
+  appStarted = true;
+  renderTabs();
+  renderTable();
+  renderSelectedPatient();
+  caricaPazienti();
+}
 
 function textValue(v) {
   return (v ?? "").toString().trim();
@@ -493,13 +535,18 @@ function findPatient(id) {
   return (state.data[state.currentMonth] || []).find(p => p.id === id);
 }
 
+function findPatientAnyMonth(id) {
+  for (const m of months) {
+    const p = (state.data[m] || []).find(x => x.id === id);
+    if (p) return { patient: p, month: m };
+  }
+  return { patient: null, month: null };
+}
+
 function filteredRows() {
   const search = textValue(document.getElementById("searchInput").value).toLowerCase();
   const filterCall = document.getElementById("filterCall").value;
   const filterBooking = document.getElementById("filterBooking").value;
-  const filterHasOrder = document.getElementById("filterHasOrder").value;
-  const sortBy = document.getElementById("sortBy").value;
-  const sortDir = document.getElementById("sortDir").value;
 
   let rows = (state.data[state.currentMonth] || []).filter(p => {
     const blob = [
@@ -512,23 +559,12 @@ function filteredRows() {
     if (filterCall && textValue(p.statoChiamata) !== filterCall) return false;
     if (filterBooking && textValue(p.statoPrenotazione) !== filterBooking) return false;
 
-    const hasOrder = Number.isFinite(Number(textValue(p.ordineChiamata))) && Number(textValue(p.ordineChiamata)) > 0;
-    if (filterHasOrder === "yes" && !hasOrder) return false;
-    if (filterHasOrder === "no" && hasOrder) return false;
-
     return true;
   });
 
   rows.sort((a,b) => {
-    let cmp = 0;
-    if (sortBy === "ordine") cmp = orderNum(a) - orderNum(b) || textValue(a.nome).localeCompare(textValue(b.nome), "it");
-    else if (sortBy === "nome") cmp = textValue(a.nome).localeCompare(textValue(b.nome), "it");
-    else {
-      const av = parseDateToSortable(a[sortBy]) ?? Number.MAX_SAFE_INTEGER;
-      const bv = parseDateToSortable(b[sortBy]) ?? Number.MAX_SAFE_INTEGER;
-      cmp = av - bv || textValue(a.nome).localeCompare(textValue(b.nome), "it");
-    }
-    return sortDir === "desc" ? -cmp : cmp;
+    return orderNum(a) - orderNum(b) ||
+           textValue(a.nome).localeCompare(textValue(b.nome), "it");
   });
 
   return rows;
@@ -606,6 +642,7 @@ function renderSelectedPatient() {
   box.innerHTML = `
     <div class="details-grid">
       <div class="detail"><div class="label">Paziente</div><div class="value">${escapeHtml(textValue(p.nome) || "—")}</div></div>
+      <div class="detail"><div class="label">Mese</div><div class="value">${escapeHtml(textValue(p.mese) || state.currentMonth)}</div></div>
       <div class="detail"><div class="label">Settimana di chiamata</div><div class="value">${escapeHtml(textValue(p.ordineChiamata) || "Non assegnata")}</div></div>
       <div class="detail"><div class="label">Recapito</div><div class="value">${escapeHtml(textValue(p.recapito) || "—")}</div></div>
       <div class="detail"><div class="label">Medico richiedente</div><div class="value">${escapeHtml(textValue(p.medico) || "—")}</div></div>
@@ -671,6 +708,7 @@ function clearForm(resetEditing = true) {
   ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"]
     .forEach(k => document.getElementById("f_" + k).value = "");
 
+  document.getElementById("f_mese").value = state.currentMonth;
   document.getElementById("f_dataInserimento").value = todayString();
   document.getElementById("f_dataEsamePicker").value = "";
   document.getElementById("f_statoChiamata").value = "Non chiamato";
@@ -695,6 +733,7 @@ function editPatient(id) {
   ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"]
     .forEach(k => document.getElementById("f_" + k).value = textValue(p[k]));
 
+  document.getElementById("f_mese").value = textValue(p.mese) || state.currentMonth;
   document.getElementById("f_statoChiamata").value = textValue(p.statoChiamata) || "Non chiamato";
   document.getElementById("f_statoPrenotazione").value = textValue(p.statoPrenotazione) || "In lista";
   syncExamDatePickerFromText();
@@ -782,10 +821,11 @@ async function savePatient() {
   }
 
   const isNewPatient = !state.editingId;
+  const selectedMonth = document.getElementById("f_mese").value || state.currentMonth;
 
   const payload = {
     id: state.editingId || nextId(),
-    mese: state.currentMonth,
+    mese: selectedMonth,
     nome: textValue(document.getElementById("f_nome").value),
     recapito: textValue(document.getElementById("f_recapito").value),
     medico: textValue(document.getElementById("f_medico").value),
@@ -841,6 +881,7 @@ async function savePatient() {
       }
     }
 
+    state.currentMonth = payload.mese;
     state.editingId = payload.id;
     state.selectedId = payload.id;
 
@@ -1026,9 +1067,6 @@ function resetCurrentMonthFilters() {
   document.getElementById("searchInput").value = "";
   document.getElementById("filterCall").value = "";
   document.getElementById("filterBooking").value = "";
-  document.getElementById("filterHasOrder").value = "";
-  document.getElementById("sortBy").value = "ordine";
-  document.getElementById("sortDir").value = "asc";
   renderTable();
 }
 
@@ -1043,10 +1081,12 @@ function exportJSON() {
 
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
 
-renderTabs();
-renderTable();
-renderSelectedPatient();
-caricaPazienti();
+if (sessionStorage.getItem("tcp_logged_in") === "yes") {
+  document.getElementById("loginScreen").style.display = "none";
+  startApp();
+} else {
+  document.getElementById("passwordInput").focus();
+}
 </script>
 </body>
 </html>
