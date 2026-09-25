@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestione Lista TCP 2026-2027 - v8</title>
+<title>Gestione Lista TCP 2026–2027</title>
 <style>
 :root {
   --bg:#f5f7fb; --card:#ffffff; --line:#d8e0ea; --text:#17212b; --muted:#64748b;
@@ -127,6 +127,7 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
   .modal-body { padding:14px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header>
@@ -138,10 +139,10 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
   <div class="grid-top">
     <div class="card">
       <div class="card-body">
-        <h2>Panoramica anno e mese</h2>
-        <div class="small">Scegli prima l’anno e poi il mese e assegna tu la settimana di esecuzione: 1, 2, 3 o 4. L’infermiere vede subito in quale settimana del mese chiamare e prenotare il paziente.</div>
+        <h2>Panoramica mese</h2>
+        <div class="small">Scegli il mese e assegna tu la settimana di esecuzione: 1, 2, 3 o 4. L’infermiere vede subito in quale settimana del mese chiamare e prenotare il paziente.</div>
         <div id="yearTabs" class="tabs"></div>
-        <div id="monthTabs" class="tabs"></div>
+          <div id="monthTabs" class="tabs"></div>
         <div class="kpis">
           <div class="kpi"><div class="label">Totale pazienti</div><div class="value" id="kTotal">0</div></div>
           <div class="kpi"><div class="label">Da chiamare</div><div class="value" id="kToCall">0</div></div>
@@ -191,22 +192,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
           <option>Da confermare</option>
           <option>Eseguito</option>
           <option>Annullato</option>
-        </select>
-        <select id="filterHasOrder" onchange="renderTable()">
-          <option value="">Ordine: tutti</option>
-          <option value="yes">Con ordine</option>
-          <option value="no">Senza ordine</option>
-        </select>
-        <select id="sortBy" onchange="renderTable()">
-          <option value="ordine">Ordina per settimana 1-4</option>
-          <option value="nome">Ordina per nome</option>
-          <option value="dataInserimento">Ordina per data inserimento</option>
-          <option value="dataEsame">Ordina per data esame</option>
-          <option value="ultimaChiamata">Ordina per ultima chiamata</option>
-        </select>
-        <select id="sortDir" onchange="renderTable()">
-          <option value="asc">Crescente</option>
-          <option value="desc">Decrescente</option>
         </select>
       </div>
     </div>
@@ -279,8 +264,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
         <div><label>Nome<input type="text" id="f_nome"></label></div>
         <div><label>Recapito<input type="text" id="f_recapito"></label></div>
         <div><label>Medico richiedente<input type="text" id="f_medico"></label></div>
-        <div><label>Anno<select id="f_anno"><option value="2026">2026</option><option value="2027">2027</option></select></label></div>
-        <div><label>Mese<select id="f_mese"></select></label></div>
         <div><label>Settimana del mese (1-4)<input type="number" id="f_ordineChiamata" min="1" max="4" step="1" placeholder="1, 2, 3 o 4"></label></div>
         <div class="full"><label>Patologia<input type="text" id="f_patologia"></label></div>
         <div>
@@ -340,53 +323,67 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
 </div>
 
 <script>
-const STORAGE_KEY = "tcp_lista_tcp_2026_2027_week_priority_v8";
-const LEGACY_STORAGE_KEYS = ["tcp_lista_tcp_2026_week_priority_v7","tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
+const supabaseUrl = "https://gwzviegdrdbfjwcsjvlk.supabase.co";
+const supabaseKey = "sb_publishable_hBddXLwiRCpnU5-E0WQu2Q_uj57BNdZ";
+let supabase = null;
+try {
+  if (window.supabase && window.supabase.createClient) {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  }
+} catch (e) {
+  console.warn("Supabase non disponibile", e);
+}
+let syncEnabled = !!supabase;
+let refreshIntervalId = null;
+
+const STORAGE_KEY = "tcp_lista_tcp_2026_2027_week_priority_v9";
+const LEGACY_STORAGE_KEYS = ["tcp_lista_2026_manual_priority_v6","tcp_lista_2026_manual_priority_v5","tcp_lista_2026_manual_priority_v4","tcp_lista_2026_manual_priority_v3","tcp_lista_2026_manual_priority_v2","tcp_lista_2026_manual_priority_v1"];
 const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 const initialData = {"Gennaio": [{"id": "P0001", "ordineChiamata": "", "nome": "CARDIELLO FRANCESCO", "recapito": "3288438251", "medico": "Valente", "patologia": "IA moderato severa - pz giovane", "dataInserimento": "22.09", "dataEsame": "ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0002", "ordineChiamata": "", "nome": "sorrentino carmine", "recapito": "", "medico": "c. trapianto", "patologia": "", "dataInserimento": "16/10/2025", "dataEsame": "Ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0003", "ordineChiamata": "", "nome": "del vecchio aniello  ( 21 ANNI)", "recapito": "329*6264355", "medico": "Salerno", "patologia": "", "dataInserimento": "03/12/2025", "dataEsame": "Ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0004", "ordineChiamata": "", "nome": "DI PRIMA MONICA", "recapito": "3292126631", "medico": "Di costanzo antonio (vd wa)", "patologia": "", "dataInserimento": "", "dataEsame": "ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0005", "ordineChiamata": "", "nome": "Del giudice Luigi", "recapito": "327 378 98 54", "medico": "PALMIERO", "patologia": "INSUFFICIENZA AORTICA", "dataInserimento": "18/12/2025", "dataEsame": "ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0006", "ordineChiamata": "", "nome": "Di Toro Alessandro (24/05/1976)", "recapito": "3296666291/3283881649", "medico": "Verrengia", "patologia": "", "dataInserimento": "19/12/2025", "dataEsame": "ok", "conferma": "", "note": "05/02/2026 ore 9,30", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0007", "ordineChiamata": "", "nome": "Di Buono", "recapito": "", "medico": "Centro Trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "Ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0008", "ordineChiamata": "", "nome": "Iavarazzo", "recapito": "3791984858-3427752704", "medico": "Centro Trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "ok", "conferma": "", "note": "05/02/2025 ore 12,30", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0009", "ordineChiamata": "", "nome": "BOVE Antimo", "recapito": "", "medico": "Centro Trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "Ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0010", "ordineChiamata": "", "nome": "CASALE VITO", "recapito": "3271968713", "medico": "Scognamiglio", "patologia": "", "dataInserimento": "", "dataEsame": "Ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0011", "ordineChiamata": "", "nome": "SOLLO GIOVANNA", "recapito": "3406685349", "medico": "Costanza", "patologia": "", "dataInserimento": "", "dataEsame": "ok", "conferma": "", "note": "05/02/2026 ore1030", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0012", "ordineChiamata": "", "nome": "bencivenga", "recapito": "3388168515", "medico": "ammendola", "patologia": "", "dataInserimento": "dicembre", "dataEsame": "ok", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Febbraio": [{"id": "P0013", "ordineChiamata": "", "nome": "IMPRODA", "recapito": "", "medico": "DH", "patologia": "", "dataInserimento": "", "dataEsame": "19/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0014", "ordineChiamata": "", "nome": "GUARINO", "recapito": "", "medico": "GUCH", "patologia": "", "dataInserimento": "", "dataEsame": "19/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0015", "ordineChiamata": "", "nome": "BRIGIDO", "recapito": "", "medico": "GUCH", "patologia": "", "dataInserimento": "", "dataEsame": "19/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0016", "ordineChiamata": "", "nome": "PAGANO", "recapito": "", "medico": "GUCH", "patologia": "", "dataInserimento": "", "dataEsame": "19/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0017", "ordineChiamata": "", "nome": "BASSANO", "recapito": "", "medico": "PALMIERO", "patologia": "", "dataInserimento": "", "dataEsame": "?", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0018", "ordineChiamata": "", "nome": "FALCO GENNARO", "recapito": "", "medico": "", "patologia": "", "dataInserimento": "", "dataEsame": "27/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0019", "ordineChiamata": "", "nome": "ACAMPORA", "recapito": "", "medico": "DH", "patologia": "", "dataInserimento": "", "dataEsame": "27/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0020", "ordineChiamata": "", "nome": "LIONE PANTALEONE", "recapito": "", "medico": "", "patologia": "", "dataInserimento": "", "dataEsame": "27/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0021", "ordineChiamata": "", "nome": "DI TORO", "recapito": "", "medico": "MASARONE", "patologia": "", "dataInserimento": "", "dataEsame": "05/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0022", "ordineChiamata": "", "nome": "SOLLO", "recapito": "", "medico": "CNT", "patologia": "", "dataInserimento": "", "dataEsame": "05/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0023", "ordineChiamata": "", "nome": "BELLANTUONO", "recapito": "", "medico": "CNT", "patologia": "", "dataInserimento": "", "dataEsame": "05/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0024", "ordineChiamata": "", "nome": "IAVARAZZO", "recapito": "", "medico": "CNT", "patologia": "", "dataInserimento": "", "dataEsame": "05/02/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Marzo": [{"id": "P0025", "ordineChiamata": "", "nome": "NOTARNICOLA DARIO", "recapito": "339 884 3302", "medico": "Valente", "patologia": "", "dataInserimento": "16/01/2026", "dataEsame": "19/03/2026", "conferma": "ok", "note": "AVVISARE ALMENO 15 gg prima perchè di ROMA", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0026", "ordineChiamata": "", "nome": "cecere salvatore", "recapito": "3397288588", "medico": "masarone", "patologia": "Scompenso avanzato", "dataInserimento": "15//01/2026", "dataEsame": "19/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0027", "ordineChiamata": "", "nome": "FERRAIUOLO CIRO", "recapito": "338 28 64 256/339 20 55 908", "medico": "VALENTE", "patologia": "FEVS 30%", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "RIFIUTA PER  IL CAOS MEDIATICO", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0028", "ordineChiamata": "", "nome": "Lombardi carmela", "recapito": "3405154215", "medico": "Valente", "patologia": "CMI", "dataInserimento": "05/01/2026", "dataEsame": "19/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0029", "ordineChiamata": "", "nome": "argenziano  lorenza", "recapito": "3289188419", "medico": "valente", "patologia": "", "dataInserimento": "", "dataEsame": "09/04/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0030", "ordineChiamata": "", "nome": "iannaccone giuseppina", "recapito": "3392812224", "medico": "limongelli", "patologia": "", "dataInserimento": "", "dataEsame": "19/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0031", "ordineChiamata": "", "nome": "gambrone francesco", "recapito": "C. Trap 2116", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "05/03/2026", "conferma": "Ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0032", "ordineChiamata": "", "nome": "pisacane sebastiano", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "26/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0033", "ordineChiamata": "", "nome": "cerciello sabato", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "05/03/2026", "conferma": "Ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0034", "ordineChiamata": "", "nome": "auzino salvatore", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "non risponde", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0035", "ordineChiamata": "", "nome": "todero vincenzo", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "no", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0036", "ordineChiamata": "", "nome": "di nocera salvatore", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "05/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0037", "ordineChiamata": "", "nome": "di serio giuseppe", "recapito": "3407896206", "medico": "vito di palma", "patologia": "", "dataInserimento": "", "dataEsame": "26/03/2026", "conferma": "non eseguito perche' operato", "note": "paz visto da di palma a novembre ma dato nome solo a febbraio", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0038", "ordineChiamata": "", "nome": "iulio nello", "recapito": "", "medico": "centro trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "26/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0039", "ordineChiamata": "", "nome": "VALENTE ALESSANDRO", "recapito": "", "medico": "DH", "patologia": "", "dataInserimento": "", "dataEsame": "05/03/2026", "conferma": "ok", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0040", "ordineChiamata": "", "nome": "iavarazzo", "recapito": "lo deve rifare", "medico": "c.trap", "patologia": "", "dataInserimento": "", "dataEsame": "26/03/2026", "conferma": "con impegnativa", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Aprile": [{"id": "P0041", "ordineChiamata": "", "nome": "SIMEONE DARIO", "recapito": "380 37 24 147", "medico": "VERRENGIA", "patologia": "", "dataInserimento": "", "dataEsame": "02/04/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0042", "ordineChiamata": "", "nome": "iavarone lucio", "recapito": "3488404614-3471114495", "medico": "valente", "patologia": "", "dataInserimento": "04/02/206", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0043", "ordineChiamata": "", "nome": "CAFIERO MARIO", "recapito": "345 31 09 364", "medico": "Verrengia", "patologia": "", "dataInserimento": "22 gennnaio", "dataEsame": "09/04/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0044", "ordineChiamata": "", "nome": "RUSSO VINCENZO", "recapito": "3474853700", "medico": "Tartaglione", "patologia": "", "dataInserimento": "17/02/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0045", "ordineChiamata": "", "nome": "giannino giuseppe", "recapito": "3498236929", "medico": "masarone", "patologia": "deve aprire cartella dh e poi fa anche tcp", "dataInserimento": "18/02/25026", "dataEsame": "02/04/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0046", "ordineChiamata": "", "nome": "cipullo maria pia", "recapito": "3409469724", "medico": "guch barracano", "patologia": "ha cartella aperta guch displasia  tricuspide", "dataInserimento": "20/02/2026", "dataEsame": "non si sa chi e'", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0047", "ordineChiamata": "", "nome": "campesi lorenzo", "recapito": "3294211351", "medico": "Masarone", "patologia": "CMD", "dataInserimento": "23/02/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0048", "ordineChiamata": "", "nome": "zaccariello marcella", "recapito": "334/8119092", "medico": "Di palma", "patologia": "CMI", "dataInserimento": "24/02/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0049", "ordineChiamata": "", "nome": "RUSSO GENNARO", "recapito": "3479462397", "medico": "Valente", "patologia": "", "dataInserimento": "22/01/2026", "dataEsame": "02/04/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0050", "ordineChiamata": "", "nome": "SAVIANO CATERINA", "recapito": "3206713720", "medico": "Malvezzi", "patologia": "", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "05/02/2026 ( influenzata )", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0051", "ordineChiamata": "", "nome": "D'agostino  Pasquale 20/02/69", "recapito": "3206428105", "medico": "di palma", "patologia": "", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0052", "ordineChiamata": "", "nome": "VACCARO GIULIANO", "recapito": "081/8749472-3473340102.", "medico": "BORRELLI", "patologia": "", "dataInserimento": "09/02/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0053", "ordineChiamata": "", "nome": "acampora vincenzo", "recapito": "3336420724", "medico": "verrengia", "patologia": "", "dataInserimento": "04/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0054", "ordineChiamata": "", "nome": "renna", "recapito": "annunziata", "medico": "sarubbi", "patologia": "", "dataInserimento": "20/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0055", "ordineChiamata": "", "nome": "DI Martino Salvatore", "recapito": "3287528762", "medico": "RIEGLER", "patologia": "", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0056", "ordineChiamata": "", "nome": "vicale assunta", "recapito": "3270451200", "medico": "malvezzi", "patologia": "insuff,mitralica", "dataInserimento": "30/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Maggio": [{"id": "P0057", "ordineChiamata": "", "nome": "Bonsanto Alessio", "recapito": "334 850 72 82 / 081275982", "medico": "FV", "patologia": "CMD", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0058", "ordineChiamata": "", "nome": "Sorrentino Carmine", "recapito": "339 27 08 014", "medico": "Centro Trapianti", "patologia": "", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0059", "ordineChiamata": "", "nome": "ASCIONE MARIO", "recapito": "392 362 11 12", "medico": "Marzullo", "patologia": "", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0060", "ordineChiamata": "", "nome": "cerrato nunziata", "recapito": "", "medico": "saubbi", "patologia": "c.guch ritorno venoso anomalo,cicli di levosim. Periodici", "dataInserimento": "05/03/2026", "dataEsame": "02/04/2026", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0061", "ordineChiamata": "", "nome": "solimeni antonio", "recapito": "3458001750", "medico": "renato bianchi", "patologia": "paz. Ischemico", "dataInserimento": "09/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0062", "ordineChiamata": "", "nome": "bocchetti maria", "recapito": "3388334836", "medico": "di palma", "patologia": "cmd a coronarie indenni", "dataInserimento": "09/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0063", "ordineChiamata": "", "nome": "nacarlo vincenzo", "recapito": "3342353272", "medico": "masarone", "patologia": "", "dataInserimento": "11/03/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0064", "ordineChiamata": "", "nome": "renna", "recapito": "annunziata", "medico": "sarubbi", "patologia": "insuff polmonare e tricusp severa trilogia di tof  s/p+pmk", "dataInserimento": "", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Giugno": [{"id": "P0065", "ordineChiamata": "", "nome": "virgilio assunta", "recapito": "3477912207", "medico": "contaldi", "patologia": "", "dataInserimento": "19/01/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0066", "ordineChiamata": "", "nome": "lanzano antonio", "recapito": "3384623226", "medico": "di palma", "patologia": "", "dataInserimento": "04/02/2026", "dataEsame": "", "conferma": "", "note": "", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}, {"id": "P0067", "ordineChiamata": "", "nome": "alvino renato", "recapito": "3920836190", "medico": "di  palma", "patologia": "", "dataInserimento": "03/03/2026", "dataEsame": "", "conferma": "", "note": "il paz lo deve fare a sett/ ottobre", "statoChiamata": "Non chiamato", "ultimaChiamata": "", "prossimoRichiamo": "", "esitoChiamata": "", "noteChiamata": "", "statoPrenotazione": "In lista"}], "Luglio": [], "Agosto": [], "Settembre": [], "Ottobre": [], "Novembre": [], "Dicembre": []};
+
+function emptyYear(){ const o={}; months.forEach(m=>o[m]=[]); return o; }
 
 let state = {
   currentYear: "2026",
   currentMonth: "Gennaio",
   editingId: null,
   selectedId: null,
-  data: loadState()
+  data: structuredClone(initialData)
 };
 
-function emptyYear() {
-  return Object.fromEntries(months.map(m => [m, []]));
-}
-
-function normalizeDataShape(parsed) {
-  // Migrazione automatica dalla vecchia struttura 2026 alla nuova 2026/2027.
-  if (parsed && parsed["2026"] && typeof parsed["2026"] === "object") {
-    ["2026","2027"].forEach(y => {
-      if (!parsed[y] || typeof parsed[y] !== "object") parsed[y] = emptyYear();
-      months.forEach(m => { if (!Array.isArray(parsed[y][m])) parsed[y][m] = []; });
-    });
-    return parsed;
-  }
-  const migrated = {"2026": emptyYear(), "2027": emptyYear()};
-  const source = parsed && typeof parsed === "object" ? parsed : structuredClone(initialData);
-  months.forEach(m => { if (Array.isArray(source[m])) migrated["2026"][m] = source[m]; });
-  return migrated;
-}
-
-function loadState() {
+async function loadState() {
+  const fallback = {"2026": structuredClone(initialData), "2027": emptyYear()};
+  if (!syncEnabled) return fallback;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean);
-    return normalizeDataShape(raw ? JSON.parse(raw) : structuredClone(initialData));
-  } catch (e) {
-    return normalizeDataShape(structuredClone(initialData));
-  }
+    const { data, error } = await supabase.from("pazienti_tcp").select("*").order("id", { ascending: true });
+    if (error) throw error;
+    const grouped = {"2026": emptyYear(), "2027": emptyYear()};
+    (data || []).forEach(row => {
+      let rawMonth = textValue(row.mese);
+      let year = "2026", month = rawMonth;
+      if (rawMonth.includes("|")) { const parts=rawMonth.split("|"); month=parts[0]; year=parts[1] || "2026"; }
+      if (!grouped[year]) grouped[year]=emptyYear();
+      if (!grouped[year][month]) grouped[year][month]=[];
+      grouped[year][month].push({
+        id:textValue(row.id), ordineChiamata:textValue(row.ordineChiamata), nome:textValue(row.nome), recapito:textValue(row.recapito), medico:textValue(row.medico), patologia:textValue(row.patologia), dataInserimento:textValue(row.dataInserimento), dataEsame:textValue(row.dataEsame), conferma:textValue(row.conferma), note:textValue(row.note), statoChiamata:textValue(row.statoChiamata)||"Non chiamato", ultimaChiamata:textValue(row.ultimaChiamata), prossimoRichiamo:textValue(row.prossimoRichiamo), esitoChiamata:textValue(row.esitoChiamata), noteChiamata:textValue(row.noteChiamata), statoPrenotazione:textValue(row.statoPrenotazione)||"In lista"
+      });
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(grouped));
+    return grouped;
+  } catch(e) { console.warn("Errore lettura Supabase:", e); return fallback; }
 }
 
-function saveState() {
+async function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
-}
-
-function structuredClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
+  if (!syncEnabled) return;
+  try {
+    const allRows = ["2026","2027"].flatMap(y => months.flatMap(m => (state.data[y]?.[m] || []).map(p => ({
+      id:textValue(p.id), mese:(y === "2026" ? m : m + "|" + y), nome:textValue(p.nome), recapito:textValue(p.recapito), medico:textValue(p.medico), patologia:textValue(p.patologia), dataInserimento:textValue(p.dataInserimento), dataEsame:textValue(p.dataEsame), conferma:textValue(p.conferma), note:textValue(p.note), statoChiamata:textValue(p.statoChiamata)||"Non chiamato", ultimaChiamata:textValue(p.ultimaChiamata), prossimoRichiamo:textValue(p.prossimoRichiamo), esitoChiamata:textValue(p.esitoChiamata), noteChiamata:textValue(p.noteChiamata), statoPrenotazione:textValue(p.statoPrenotazione)||"In lista", ordineChiamata:textValue(p.ordineChiamata)
+    }))));
+    const { error: deleteError } = await supabase.from("pazienti_tcp").delete().neq("id", "__none__");
+    if (deleteError) throw deleteError;
+    if (allRows.length) { const { error } = await supabase.from("pazienti_tcp").upsert(allRows, {onConflict:"id"}); if(error) throw error; }
+  } catch(e) { console.warn("Errore salvataggio Supabase:", e); alert("Errore salvataggio Supabase: " + (e.message || e)); }
 }
 
 function textValue(v) {
@@ -460,35 +457,21 @@ function orderBadge(value) {
 }
 
 function renderYearTabs() {
-  const el = document.getElementById("yearTabs");
-  el.innerHTML = ["2026","2027"].map(y => {
-    const count = months.reduce((sum,m) => sum + state.data[y][m].length, 0);
-    return `<button class="tab ${y === state.currentYear ? 'active' : ''}" onclick="selectYear('${y}')">${y} (${count})</button>`;
-  }).join("");
+  document.getElementById("yearTabs").innerHTML = ["2026","2027"].map(y => `<button class="tab ${y===state.currentYear?"active":""}" onclick="selectYear('${y}')">${y}</button>`).join("");
 }
-
-function selectYear(year) {
-  state.currentYear = year;
-  state.selectedId = null;
-  state.editingId = null;
-  clearForm();
-  renderYearTabs();
-  renderTable();
-  renderSelectedPatient();
-}
+function selectYear(y){ state.currentYear=y; state.selectedId=null; state.editingId=null; renderYearTabs(); renderTabs(); renderTable(); renderSelectedPatient(); }
 
 function renderTabs() {
-  renderYearTabs();
   const el = document.getElementById("monthTabs");
   el.innerHTML = months.map(m => {
-    const count = state.data[state.currentYear][m].length;
+    const count = state.data[m].length;
     return `<button class="tab ${m === state.currentMonth ? 'active' : ''}" onclick="selectMonth('${m}')">${m} (${count})</button>`;
   }).join("");
 }
 
 function selectMonth(month) {
   state.currentMonth = month;
-  const arr = state.data[state.currentYear][month];
+  const arr = state.data[month];
   if (state.selectedId && !arr.some(p => p.id === state.selectedId)) state.selectedId = null;
   if (state.editingId && !arr.some(p => p.id === state.editingId)) state.editingId = null;
   clearForm();
@@ -500,32 +483,15 @@ function filteredRows() {
   const search = textValue(document.getElementById("searchInput").value).toLowerCase();
   const filterCall = document.getElementById("filterCall").value;
   const filterBooking = document.getElementById("filterBooking").value;
-  const filterHasOrder = document.getElementById("filterHasOrder").value;
-  const sortBy = document.getElementById("sortBy").value;
-  const sortDir = document.getElementById("sortDir").value;
 
   let rows = state.data[state.currentYear][state.currentMonth].filter(p => {
     const blob = [p.nome,p.recapito,p.medico,p.patologia,p.note,p.noteChiamata,p.esitoChiamata,p.dataInserimento,p.dataEsame].join(" ").toLowerCase();
     if (search && !blob.includes(search)) return false;
     if (filterCall && textValue(p.statoChiamata) !== filterCall) return false;
     if (filterBooking && textValue(p.statoPrenotazione) !== filterBooking) return false;
-    const hasOrder = Number.isFinite(Number(textValue(p.ordineChiamata))) && Number(textValue(p.ordineChiamata)) > 0;
-    if (filterHasOrder === "yes" && !hasOrder) return false;
-    if (filterHasOrder === "no" && hasOrder) return false;
     return true;
   });
-
-  rows.sort((a,b) => {
-    let cmp = 0;
-    if (sortBy === "ordine") cmp = orderNum(a) - orderNum(b) || textValue(a.nome).localeCompare(textValue(b.nome), 'it');
-    else if (sortBy === "nome") cmp = textValue(a.nome).localeCompare(textValue(b.nome), 'it');
-    else {
-      const av = parseDateToSortable(a[sortBy]) ?? Number.MAX_SAFE_INTEGER;
-      const bv = parseDateToSortable(b[sortBy]) ?? Number.MAX_SAFE_INTEGER;
-      cmp = av - bv || textValue(a.nome).localeCompare(textValue(b.nome), 'it');
-    }
-    return sortDir === "desc" ? -cmp : cmp;
-  });
+  rows.sort((a,b) => textValue(a.nome).localeCompare(textValue(b.nome), "it"));
   return rows;
 }
 
@@ -654,11 +620,6 @@ function clearExamDate() {
   document.getElementById("f_dataEsamePicker").value = "";
 }
 
-function populateMonthSelect() {
-  const el = document.getElementById("f_mese");
-  el.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join("");
-}
-
 function clearForm(resetEditing=true) {
   if (resetEditing) state.editingId = null;
   document.getElementById("formTitle").textContent = state.editingId ? "Modifica scheda paziente" : "Nuova scheda paziente";
@@ -714,10 +675,6 @@ function nextId() {
 }
 
 function savePatient() {
-  const originYear = state.currentYear;
-  const originMonth = state.currentMonth;
-  const targetYear = document.getElementById("f_anno").value || originYear;
-  const targetMonth = document.getElementById("f_mese").value || originMonth;
   const examText = textValue(document.getElementById("f_dataEsame").value);
   const pickerValue = textValue(document.getElementById("f_dataEsamePicker").value);
   let ordine = textValue(document.getElementById("f_ordineChiamata").value);
@@ -728,6 +685,9 @@ function savePatient() {
     ordine = n ? String(n) : "";
   }
   const isNewPatient = !state.editingId;
+  const originYear = state.currentYear, originMonth = state.currentMonth;
+  const targetYear = document.getElementById("f_anno").value || originYear;
+  const targetMonth = document.getElementById("f_mese").value || originMonth;
   const payload = {
     id: state.editingId || nextId(),
     nome: textValue(document.getElementById("f_nome").value),
@@ -752,7 +712,7 @@ function savePatient() {
   }
   const originArr = state.data[originYear][originMonth];
   const idx = originArr.findIndex(p => p.id === payload.id);
-  if (idx >= 0) originArr.splice(idx, 1);
+  if (idx >= 0) originArr.splice(idx,1);
   state.data[targetYear][targetMonth].push(payload);
   state.currentYear = targetYear;
   state.currentMonth = targetMonth;
@@ -854,15 +814,12 @@ function assignNextOrderToSelected() {
   setOrder(state.selectedId, getNextManualOrder());
 }
 
-function quickSetExecuted(id) {
-  const p = findPatient(id);
-  if (!p) return;
-  state.selectedId = id;
+async function quickSetExecuted(id) {
+  const p = findPatient(id); if (!p) return;
   p.statoPrenotazione = "Eseguito";
-  saveState();
-  renderTable();
-  renderSelectedPatient();
-  if (state.editingId === id) editPatient(id);
+  state.selectedId = id;
+  await saveState();
+  renderTable(); renderSelectedPatient();
 }
 
 function quickRowCall(id, status) {
@@ -899,9 +856,6 @@ function resetCurrentMonthFilters() {
   document.getElementById("searchInput").value = "";
   document.getElementById("filterCall").value = "";
   document.getElementById("filterBooking").value = "";
-  document.getElementById("filterHasOrder").value = "";
-  document.getElementById("sortBy").value = "ordine";
-  document.getElementById("sortDir").value = "asc";
   renderTable();
 }
 
@@ -909,7 +863,7 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(state.data, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "backup_tcp_2026_2027_v8.json";
+  a.download = "backup_tcp_2026_v6.json";
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -921,7 +875,8 @@ function importJSON(event) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      state.data = normalizeDataShape(parsed);
+      months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
+      state.data = parsed;
       state.selectedId = null;
       state.editingId = null;
       saveState();
@@ -938,12 +893,36 @@ function importJSON(event) {
   event.target.value = "";
 }
 
-populateMonthSelect();
 document.getElementById("f_dataEsame").addEventListener("input", syncExamDatePickerFromText);
 
-renderTabs();
-renderTable();
-renderSelectedPatient();
+async function refreshFromSupabaseSilently() {
+  if (!syncEnabled || document.getElementById("editorBackdrop").classList.contains("open")) return;
+  try {
+    const freshData = await loadState();
+    state.data = freshData;
+    const arr = state.data[state.currentYear][state.currentMonth] || [];
+    if (state.selectedId && !arr.some(p => p.id === state.selectedId)) state.selectedId = null;
+    if (state.editingId && !arr.some(p => p.id === state.editingId)) state.editingId = null;
+    renderTabs();
+    renderTable();
+    renderSelectedPatient();
+  } catch (e) {
+    console.warn("Refresh silenzioso fallito:", e);
+  }
+}
+
+async function initApp() {
+  state.data = await loadState();
+  renderTabs();
+  renderTable();
+  renderSelectedPatient();
+
+  if (syncEnabled) {
+    refreshIntervalId = setInterval(refreshFromSupabaseSilently, 15000);
+  }
+}
+
+initApp();
 </script>
 </body>
 </html>
