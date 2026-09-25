@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestione Lista TCP 2026–2027</title>
+<title>LISTA TCP</title>
 <style>
 :root {
   --bg:#f5f7fb; --card:#ffffff; --line:#d8e0ea; --text:#17212b; --muted:#64748b;
@@ -126,16 +126,16 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
   .modal-header { padding:12px 14px; }
   .modal-body { padding:14px; }
 }
+.app-header-row{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:1500px;margin:0 auto}.app-brand{display:flex;align-items:center;gap:12px}.app-logo{width:44px;height:44px;border-radius:14px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:var(--shadow)}.app-nav{display:flex;gap:8px;flex-wrap:wrap}.app-nav button{background:#fff;border-color:#bfdbfe;color:var(--primary);font-weight:700}.app-nav button.active{background:var(--primary);color:#fff}.app-page{display:none}.app-page.active{display:block}.backup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.backup-tile{border:1px solid var(--line);border-radius:16px;padding:18px;background:#fbfdff}.grid-top{grid-template-columns:1fr}.fab{position:fixed;right:22px;bottom:22px;z-index:35;border-radius:999px!important;padding:14px 18px!important;box-shadow:0 12px 30px rgba(29,78,216,.28);font-weight:800}@media(max-width:760px){.app-header-row{align-items:flex-start;flex-direction:column}.app-nav{width:100%}.app-nav button{flex:1}.backup-grid{grid-template-columns:1fr}.fab{right:14px;bottom:14px}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header>
-  <h1>Gestione Lista TCP 2026–2027</h1>
-  <div class="small">Priorità di chiamata solo manuale. In questa versione puoi <strong>visualizzare la scheda di prenotazione</strong>, <strong>modificare la scheda del paziente</strong>, <strong>inserire nuovi pazienti</strong> e <strong>cambiare la data dell'esame</strong> senza che la scheda venga tagliata su tablet o telefono.</div>
-</header>
+<header><div class="app-header-row"><div class="app-brand"><div class="app-logo">TCP</div><div><h1>LISTA TCP</h1><div class="small">Gestione condivisa della lista pazienti 2026–2027</div></div></div><nav class="app-nav"><button id="navLista" class="active" onclick="showAppPage('lista')">Lista pazienti</button><button onclick="addNewPatient()">+ Nuovo paziente</button><button id="navBackup" onclick="showAppPage('backup')">Backup dati</button></nav></div></header>
 
 <div class="container">
+<section id="pageLista" class="app-page active">
   <div class="grid-top">
     <div class="card">
       <div class="card-body">
@@ -153,23 +153,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-body">
-        <h2>Azioni rapide</h2>
-        <div class="small">Le modifiche vengono salvate automaticamente nel browser del dispositivo.</div>
-        <div class="btns">
-          <button class="primary" onclick="addNewPatient()">Nuovo paziente</button>
-          <button onclick="openEditorForSelected()">Modifica paziente selezionato</button>
-          <button onclick="assignNextOrderToSelected()">Assegna settimana</button>
-          <button onclick="normalizeCurrentMonthOrders()">Controlla settimane 1-4</button>
-          <button onclick="exportJSON()">Esporta backup JSON</button>
-          <button onclick="document.getElementById('importFile').click()">Importa backup JSON</button>
-          <button class="ghost" onclick="resetCurrentMonthFilters()">Reset filtri</button>
-        </div>
-        <input id="importFile" type="file" accept=".json" class="hidden" onchange="importJSON(event)">
-        <div class="footer-note">La scheda paziente si apre in finestra dedicata, così su iPad e schermi stretti resta sempre leggibile.</div>
-      </div>
-    </div>
   </div>
 
   <div class="card" style="margin-bottom:16px;">
@@ -188,8 +171,6 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
         <select id="filterBooking" onchange="renderTable()">
           <option value="">Tutte le prenotazioni</option>
           <option>In lista</option>
-          <option>Prenotato</option>
-          <option>Da confermare</option>
           <option>Eseguito</option>
           <option>Annullato</option>
         </select>
@@ -248,7 +229,10 @@ thead th { position:sticky; top:0; background:#f8fafc; z-index:1; font-size:.94r
       </div>
     </div>
   </div>
-</div>
+</section>
+<section id="pageBackup" class="app-page"><div class="card"><div class="card-body"><h2>Backup e sicurezza dati</h2><div class="small">Prima di ogni aggiornamento puoi salvare una copia completa dell’intero database 2026–2027.</div><div class="backup-grid" style="margin-top:14px"><div class="backup-tile"><h3>Excel / Numbers</h3><div class="small">Esporta tutti i pazienti, di tutti i mesi e anni, in un unico file .xlsx apribile con Excel e Apple Numbers.</div><div class="btns"><button class="primary" onclick="exportExcel()">Esporta Excel / Numbers</button></div></div><div class="backup-tile"><h3>Backup completo</h3><div class="small">Il JSON conserva la struttura dell’app ed è utile per un eventuale ripristino.</div><div class="btns"><button onclick="exportJSON()">Esporta JSON</button><button onclick="document.getElementById('importFile').click()">Importa JSON</button></div><input id="importFile" type="file" accept=".json" class="hidden" onchange="importJSON(event)"></div></div></div></div></section><button class="primary fab" onclick="addNewPatient()">+ Nuovo paziente</button></div>
+
+
 
 <div id="editorBackdrop" class="modal-backdrop" onclick="backdropClose(event)">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
@@ -852,6 +836,11 @@ function quickSetCall(status) {
   }
 }
 
+
+function showAppPage(page){const a=document.getElementById("pageLista"),b=document.getElementById("pageBackup");if(!a||!b)return;a.classList.toggle("active",page==="lista");b.classList.toggle("active",page==="backup");document.getElementById("navLista")?.classList.toggle("active",page==="lista");document.getElementById("navBackup")?.classList.toggle("active",page==="backup");window.scrollTo({top:0,behavior:"smooth"});}
+function allPatientsForExport(){const rows=[];["2026","2027"].forEach(Anno=>months.forEach(Mese=>(state.data[Anno]?.[Mese]||[]).forEach(p=>rows.push({Anno,Mese,ID:textValue(p.id),Settimana:textValue(p.ordineChiamata),Paziente:textValue(p.nome),Recapito:textValue(p.recapito),Medico:textValue(p.medico),Patologia:textValue(p.patologia),"Data inserimento":textValue(p.dataInserimento),"Data esame":textValue(p.dataEsame),Conferma:textValue(p.conferma),"Stato chiamata":textValue(p.statoChiamata),"Ultima chiamata":textValue(p.ultimaChiamata),"Prossimo richiamo":textValue(p.prossimoRichiamo),"Esito chiamata":textValue(p.esitoChiamata),"Stato prenotazione":textValue(p.statoPrenotazione),"Note cliniche / organizzative":textValue(p.note),"Note telefonate":textValue(p.noteChiamata)}))));return rows;}
+function exportExcel(){try{if(typeof XLSX==="undefined"){alert("Modulo Excel non disponibile. Controlla la connessione e riprova.");return;}const rows=allPatientsForExport();if(!rows.length){alert("Non ci sono dati da esportare.");return;}const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);ws["!cols"]=[{wch:8},{wch:12},{wch:10},{wch:10},{wch:28},{wch:18},{wch:22},{wch:34},{wch:16},{wch:16},{wch:14},{wch:18},{wch:16},{wch:18},{wch:24},{wch:20},{wch:40},{wch:40}];XLSX.utils.book_append_sheet(wb,ws,"Database TCP");const d=new Date(),stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");XLSX.writeFile(wb,"LISTA_TCP_backup_"+stamp+".xlsx");}catch(e){alert("Errore esportazione Excel: "+(e.message||e));}}
+
 function resetCurrentMonthFilters() {
   document.getElementById("searchInput").value = "";
   document.getElementById("filterCall").value = "";
@@ -863,7 +852,7 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(state.data, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "backup_tcp_2026_v6.json";
+  a.download = "LISTA_TCP_backup_2026_2027.json";
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -875,8 +864,11 @@ function importJSON(event) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      months.forEach(m => { if (!Array.isArray(parsed[m])) parsed[m] = []; });
-      state.data = parsed;
+      let restored;
+      if (parsed && parsed["2026"] && parsed["2027"]) restored = parsed;
+      else { restored={"2026":emptyYear(),"2027":emptyYear()}; months.forEach(m=>{restored["2026"][m]=Array.isArray(parsed?.[m])?parsed[m]:[];}); }
+      ["2026","2027"].forEach(y=>months.forEach(m=>{if(!Array.isArray(restored[y]?.[m])) restored[y][m]=[];}));
+      state.data = restored;
       state.selectedId = null;
       state.editingId = null;
       saveState();
