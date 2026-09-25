@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LISTA TCP</title>
+<title>REGISTRO TCP</title>
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--line:#dbe3ee;--text:#172033;--muted:#64748b;--primary:#2563eb;--primary2:#1d4ed8;--soft:#eff6ff;--ok:#166534;--okbg:#dcfce7;--warn:#92400e;--warnbg:#fef3c7;--bad:#991b1b;--badbg:#fee2e2;--shadow:0 12px 30px rgba(15,23,42,.08)}
 *{box-sizing:border-box}html,body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}body.modal-open{overflow:hidden}
@@ -14,7 +14,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 .container{max-width:1500px;margin:auto;padding:18px}.hero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;margin-bottom:14px}.hero h2{margin:0 0 5px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.card-body{padding:16px}.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px}.kpi .n{font-size:1.45rem;font-weight:850;margin-top:3px}.month-tabs{margin:12px 0 16px}
 .filters{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:10px}.table-card{overflow:hidden}.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;min-width:1320px}th,td{padding:11px 9px;border-bottom:1px solid #e7edf5;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:1;font-size:.87rem;color:#475569}tr.selected{background:#f5f9ff}.badge{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:.8rem;font-weight:750;white-space:nowrap}.neutral{background:#e2e8f0;color:#334155}.ok{background:var(--okbg);color:var(--ok)}.warnbg{background:var(--warnbg);color:var(--warn)}.badbg{background:var(--badbg);color:var(--bad)}.blue{background:#dbeafe;color:#1d4ed8}.week{display:flex;align-items:center;gap:6px}.week input{width:58px}.empty{padding:30px;text-align:center;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(980px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-head{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid var(--line);padding:15px 18px;display:flex;align-items:center;gap:12px}.modal-head h2{margin:0}.modal-body{padding:18px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:.88rem;font-weight:650;color:#475569}label input,label select,label textarea{margin-top:5px}.modal-actions{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:13px 0 0;margin-top:16px}
-.statusline{font-size:.86rem;color:var(--muted);margin-top:8px}.statusline.error{color:var(--bad);font-weight:700}
+.statusline{font-size:.86rem;color:var(--muted);margin-top:8px}.zoom-controls{display:flex;align-items:center;gap:6px}.zoom-controls button{width:40px;height:40px;padding:0;font-size:1.35rem;line-height:1}.zoom-label{min-width:48px;text-align:center;font-size:.82rem;color:var(--muted);font-weight:700}.statusline.error{color:var(--bad);font-weight:700}
 @media(max-width:900px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.appbar-inner{flex-wrap:wrap}}@media(max-width:650px){.container{padding:11px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.modal-backdrop{padding:0}.modal{height:100vh;max-height:100vh;border-radius:0}.kpis{grid-template-columns:1fr 1fr}.brand{font-size:1.1rem}}
 </style>
 </head>
@@ -22,7 +22,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-logo">TCP</div>
-    <h1>LISTA TCP</h1>
+    <h1>REGISTRO TCP</h1>
     <div class="small">Inserisci la password per accedere.</div>
     <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:16px" onkeydown="if(event.key==='Enter')checkPassword()">
     <button class="primary" style="width:100%;margin-top:12px" onclick="checkPassword()">Accedi</button>
@@ -32,9 +32,14 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 
 <header class="appbar">
   <div class="appbar-inner">
-    <div class="brand">LISTA TCP</div>
+    <div class="brand">REGISTRO TCP</div>
     <div id="yearTabs" class="year-tabs"></div>
     <div class="spacer"></div>
+    <div class="zoom-controls" aria-label="Zoom visualizzazione">
+      <button type="button" onclick="changeZoom(-10)" title="Riduci visualizzazione">−</button>
+      <span id="zoomLabel" class="zoom-label">100%</span>
+      <button type="button" onclick="changeZoom(10)" title="Aumenta visualizzazione">＋</button>
+    </div>
     <button class="primary" onclick="addNewPatient()">＋ Nuovo paziente</button>
     <button onclick="exportExcel()">Esporta Excel / Numbers</button>
     <button onclick="logout()">Esci</button>
@@ -141,7 +146,18 @@ function badge(s,type){s=v(s)|| (type==="call"?"Non chiamato":"In lista");let c=
 
 function checkPassword(){const i=document.getElementById("passwordInput");if(i.value===APP_PASSWORD){sessionStorage.setItem("tcp_logged_in","yes");document.getElementById("loginScreen").style.display="none";startApp()}else{document.getElementById("loginError").style.display="block";i.value="";i.focus()}}
 function logout(){sessionStorage.removeItem("tcp_logged_in");location.reload()}
-function startApp(){if(appStarted)return;appStarted=true;fillMonths();renderNavigation();caricaPazienti()}
+function applyZoom(){
+  const z=Math.min(150,Math.max(60,Number(localStorage.getItem("tcp_zoom")||100)));
+  document.documentElement.style.zoom=(z/100);
+  const label=document.getElementById("zoomLabel");
+  if(label)label.textContent=z+"%";
+}
+function changeZoom(delta){
+  const current=Number(localStorage.getItem("tcp_zoom")||100);
+  localStorage.setItem("tcp_zoom",String(Math.min(150,Math.max(60,current+delta))));
+  applyZoom();
+}
+function startApp(){if(appStarted)return;appStarted=true;applyZoom();fillMonths();renderNavigation();caricaPazienti()}
 
 function fillMonths(){document.getElementById("f_mese").innerHTML=months.map(m=>`<option>${m}</option>`).join("")}
 function renderNavigation(){
