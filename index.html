@@ -110,6 +110,22 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
   }
 }
 
+
+/* Tabella compatta: colonne visibili su iPad */
+@media (min-width:761px){
+ table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+ th:nth-child(1),td:nth-child(1){width:5%!important}
+ th:nth-child(2),td:nth-child(2){width:13%!important}
+ th:nth-child(3),td:nth-child(3){width:11%!important}
+ th:nth-child(4),td:nth-child(4){width:11%!important}
+ th:nth-child(5),td:nth-child(5){width:9%!important}
+ th:nth-child(6),td:nth-child(6){width:9%!important}
+ th:nth-child(7),td:nth-child(7){width:9%!important}
+ th:nth-child(8),td:nth-child(8){width:9%!important}
+ th:nth-child(9),td:nth-child(9){width:13%!important}
+ th:nth-child(10),td:nth-child(10){width:11%!important;min-width:100px!important}
+}
+
 </style>
 </head>
 <body>
@@ -177,7 +193,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Sett.</th><th>Paziente</th><th>Recapito</th><th>Medico</th><th>Patologia</th><th>Inserimento</th><th>Data esame</th><th>Chiamata</th><th>Ultima chiamata</th><th>Richiamo</th><th>Stato</th><th>Note / esito</th><th>Azioni</th>
+          <th>Sett.</th><th>Paziente</th><th>Recapito</th><th>Medico</th><th>Inserimento</th><th>Data esame</th><th>Ultima chiamata</th><th>Stato</th><th>Note / esito</th><th>Azioni</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -270,10 +286,10 @@ function renderTable(){
  const rows=filteredRows(),tb=document.getElementById("tableBody");
  tb.innerHTML=rows.length?rows.map(p=>`<tr class="${state.selectedId===p.id?"selected":""}">
  <td><div class="week"><input type="number" min="1" max="4" value="${esc(v(p.ordineChiamata))}" onchange="setOrder('${esc(p.id)}',this.value)"></div></td>
- <td><strong>${esc(p.nome)}</strong></td><td>${esc(p.recapito)}</td><td>${esc(p.medico)}</td><td>${esc(p.patologia)}</td><td>${esc(p.dataInserimento)}</td><td>${esc(p.dataEsame)}</td>
- <td>${badge(p.statoChiamata,"call")}</td><td>${esc(p.ultimaChiamata)}</td><td>${esc(p.prossimoRichiamo)}</td><td>${badge(p.statoPrenotazione,"booking")}</td>
+ <td><strong>${esc(p.nome)}</strong></td><td>${esc(p.recapito)}</td><td>${esc(p.medico)}</td><td>${esc(p.dataInserimento)}</td><td>${esc(p.dataEsame)}</td>
+ <td>${esc(p.ultimaChiamata)}</td><td>${badge(p.statoPrenotazione,"booking")}</td>
  <td>${esc([v(p.esitoChiamata),v(p.note),v(p.noteChiamata)].filter(Boolean).join(" • "))}</td>
- <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim warn" onclick="quickCall('${esc(p.id)}','Da richiamare')">Richiama</button></div></td></tr>`).join(""):`<tr><td colspan="13" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
+ <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim" onclick="editExamDate('${esc(p.id)}')">Data esame</button></div></td></tr>`).join(""):`<tr><td colspan="10" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
  updateKpis();renderNavigation()
 }
 function updateKpis(){const a=currentRows();document.getElementById("kTotal").textContent=a.length;document.getElementById("kToCall").textContent=a.filter(p=>!v(p.statoChiamata)||v(p.statoChiamata)==="Non chiamato").length;document.getElementById("kCalled").textContent=a.filter(p=>v(p.statoChiamata)==="Chiamato").length;document.getElementById("kRecall").textContent=a.filter(p=>v(p.statoChiamata)==="Da richiamare").length;document.getElementById("kDone").textContent=a.filter(p=>v(p.statoPrenotazione)==="Eseguito").length}
@@ -285,7 +301,7 @@ async function caricaPazienti(){
   if(!res.ok)throw new Error(await res.text()||`HTTP ${res.status}`);
   const data=await res.json();if(!Array.isArray(data))throw new Error("Risposta database non valida");
   state.rows=data;setStatus(`Database collegato: ${data.length} pazienti caricati.`);renderNavigation();renderTable()
- }catch(e){setStatus("Errore collegamento Supabase: "+e.message,true);document.getElementById("tableBody").innerHTML=`<tr><td colspan="13" class="empty">Impossibile caricare i pazienti. Nessun dato locale è stato cancellato.</td></tr>`}
+ }catch(e){setStatus("Errore collegamento Supabase: "+e.message,true);document.getElementById("tableBody").innerHTML=`<tr><td colspan="10" class="empty">Impossibile caricare i pazienti. Nessun dato locale è stato cancellato.</td></tr>`}
 }
 function findAny(id){return state.rows.find(p=>String(p.id)===String(id))}
 function openEditor(){document.getElementById("editorBackdrop").classList.add("open");document.body.classList.add("modal-open")}
@@ -296,6 +312,13 @@ function clearForm(){
 }
 function addNewPatient(){state.editingId=null;clearForm();document.getElementById("formTitle").textContent="Nuovo paziente";openEditor()}
 function editPatient(id){const p=findAny(id);if(!p)return;state.editingId=id;state.selectedId=id;["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k=>document.getElementById("f_"+k).value=v(p[k]));document.getElementById("f_anno").value=String(normalizeYear(p));document.getElementById("f_mese").value=normalizeMonth(p);document.getElementById("f_statoChiamata").value=v(p.statoChiamata)||"Non chiamato";let sp=v(p.statoPrenotazione)||"In lista";document.getElementById("f_statoPrenotazione").value=["In lista","Eseguito","Annullato"].includes(sp)?sp:"In lista";document.getElementById("formTitle").textContent="Scheda paziente";renderTable();openEditor()}
+function editExamDate(id){
+  editPatient(id);
+  setTimeout(()=>{
+    const el=document.getElementById("f_dataEsame");
+    if(el){el.focus();el.scrollIntoView({behavior:"smooth",block:"center"});}
+  },100);
+}
 function applyExamDatePicker(){const iso=document.getElementById("f_dataEsamePicker").value;if(!iso)return;const [y,m,d]=iso.split("-");document.getElementById("f_dataEsame").value=`${d}/${m}/${y}`}
 function nextId(){let max=0;state.rows.forEach(p=>{const n=Number(String(p.id||"").replace(/\D/g,""));if(Number.isFinite(n))max=Math.max(max,n)});return "P"+String(max+1).padStart(4,"0")}
 
