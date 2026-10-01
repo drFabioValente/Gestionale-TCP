@@ -167,14 +167,6 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 
   <div id="monthTabs" class="month-tabs"></div>
 
-  <section class="kpis">
-    <div class="kpi"><div class="small">Totale</div><div class="n" id="kTotal">0</div></div>
-    <div class="kpi"><div class="small">Da chiamare</div><div class="n" id="kToCall">0</div></div>
-    <div class="kpi"><div class="small">Chiamati</div><div class="n" id="kCalled">0</div></div>
-    <div class="kpi"><div class="small">Da richiamare</div><div class="n" id="kRecall">0</div></div>
-    <div class="kpi"><div class="small">Eseguiti</div><div class="n" id="kDone">0</div></div>
-  </section>
-
   <section class="card" style="margin-bottom:14px">
     <div class="card-body">
       <div class="filters">
@@ -289,10 +281,10 @@ function renderTable(){
  <td><strong>${esc(p.nome)}</strong></td><td>${esc(p.recapito)}</td><td>${esc(p.medico)}</td><td>${esc(p.dataInserimento)}</td><td>${esc(p.dataEsame)}</td>
  <td>${esc(p.ultimaChiamata)}</td><td>${badge(p.statoPrenotazione,"booking")}</td>
  <td>${esc([v(p.esitoChiamata),v(p.note),v(p.noteChiamata)].filter(Boolean).join(" • "))}</td>
- <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim" onclick="editExamDate('${esc(p.id)}')">Data esame</button></div></td></tr>`).join(""):`<tr><td colspan="10" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
+ <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim" onclick="editExamDate('${esc(p.id)}')">Data esame</button><button class="slim bad" onclick="deleteRowPatient('${esc(p.id)}')">Cancella</button></div></td></tr>`).join(""):`<tr><td colspan="10" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
  updateKpis();renderNavigation()
 }
-function updateKpis(){const a=currentRows();document.getElementById("kTotal").textContent=a.length;document.getElementById("kToCall").textContent=a.filter(p=>!v(p.statoChiamata)||v(p.statoChiamata)==="Non chiamato").length;document.getElementById("kCalled").textContent=a.filter(p=>v(p.statoChiamata)==="Chiamato").length;document.getElementById("kRecall").textContent=a.filter(p=>v(p.statoChiamata)==="Da richiamare").length;document.getElementById("kDone").textContent=a.filter(p=>v(p.statoPrenotazione)==="Eseguito").length}
+function updateKpis(){}
 
 async function caricaPazienti(){
  setStatus("Caricamento database…");
@@ -343,6 +335,20 @@ async function quickCall(id,status){try{await patch(id,{statoChiamata:status,ult
 async function markDone(id){try{await patch(id,{statoPrenotazione:"Eseguito",statoChiamata:"Chiamato",ultimaChiamata:today()})}catch(e){alert(e.message)}}
 function quickSetCall(s){document.getElementById("f_statoChiamata").value=s;document.getElementById("f_ultimaChiamata").value=today()}
 function markEditingDone(){document.getElementById("f_statoPrenotazione").value="Eseguito";document.getElementById("f_statoChiamata").value="Chiamato";document.getElementById("f_ultimaChiamata").value=today()}
+async function deleteRowPatient(id){
+ const p=findAny(id);
+ if(!p)return;
+ if(!confirm("Eliminare definitivamente il paziente "+v(p.nome)+"? Questa operazione non può essere annullata."))return;
+ try{
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`,{method:"DELETE",headers:headers(true)});
+  if(!res.ok)throw new Error(await res.text()||"Errore eliminazione");
+  const deleted=await res.json();
+  if(!Array.isArray(deleted)||deleted.length===0)throw new Error("Nessuna riga eliminata. Controllare i permessi Supabase.");
+  if(state.selectedId===id)state.selectedId=null;
+  if(state.editingId===id){state.editingId=null;closeEditor()}
+  await caricaPazienti();
+ }catch(e){alert("Errore eliminazione: "+e.message)}
+}
 async function deletePatient(){if(!state.editingId)return;if(!confirm("Eliminare definitivamente questo paziente?"))return;try{const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(state.editingId)}`,{method:"DELETE",headers:headers()});if(!res.ok)throw new Error(await res.text());state.editingId=null;state.selectedId=null;closeEditor();await caricaPazienti()}catch(e){alert("Errore eliminazione: "+e.message)}}
 
 function csvCell(x){return '"'+String(x??"").replaceAll('"','""')+'"'}
