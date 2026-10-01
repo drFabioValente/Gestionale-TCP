@@ -250,7 +250,7 @@ function esc(x){return (x??"").toString().replaceAll("&","&amp;").replaceAll("<"
 function today(){const d=new Date();return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()}
 function headers(prefer=false){const h={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};if(prefer)h["Prefer"]="return=representation";return h}
 function setStatus(msg,error=false){const e=document.getElementById("dbStatus");e.textContent=msg;e.className="statusline"+(error?" error":"")}
-function normalizeYear(row){const raw=v(row.anno||row.year);if(raw==="2027")return 2027;if(raw==="2026")return 2026;const candidates=[row.dataEsame,row.dataInserimento].map(v).join(" ");return candidates.includes("2027")?2027:2026}
+function normalizeYear(row){const raw=v(row.anno);return raw==="2027"?2027:2026}
 function normalizeMonth(row){const m=v(row.mese);return months.includes(m)?m:"Gennaio"}
 function badge(s,type){s=v(s)|| (type==="call"?"Non chiamato":"In lista");let c="neutral";if(s==="Chiamato"||s==="Eseguito")c="ok";else if(s==="Da richiamare")c="warnbg";else if(s==="Non risponde"||s==="Rinuncia"||s==="Annullato")c="badbg";else if(s==="In lista")c="blue";return `<span class="badge ${c}">${esc(s)}</span>`}
 
@@ -324,19 +324,17 @@ function nextId(){let max=0;state.rows.forEach(p=>{const n=Number(String(p.id||"
 
 async function savePatient(){
  let ordine=v(document.getElementById("f_ordineChiamata").value);if(ordine){ordine=String(Math.max(1,Math.min(4,Math.round(Number(ordine)||1))))}
- const payload={id:state.editingId||nextId(),mese:document.getElementById("f_mese").value,nome:v(document.getElementById("f_nome").value),recapito:v(document.getElementById("f_recapito").value),medico:v(document.getElementById("f_medico").value),ordineChiamata:ordine,patologia:v(document.getElementById("f_patologia").value),dataInserimento:v(document.getElementById("f_dataInserimento").value)||today(),dataEsame:v(document.getElementById("f_dataEsame").value),conferma:v(document.getElementById("f_conferma").value),statoChiamata:document.getElementById("f_statoChiamata").value,ultimaChiamata:v(document.getElementById("f_ultimaChiamata").value),prossimoRichiamo:v(document.getElementById("f_prossimoRichiamo").value),esitoChiamata:v(document.getElementById("f_esitoChiamata").value),note:v(document.getElementById("f_note").value),noteChiamata:v(document.getElementById("f_noteChiamata").value),statoPrenotazione:document.getElementById("f_statoPrenotazione").value};
+ const payload={id:state.editingId||nextId(),anno:Number(document.getElementById("f_anno").value),mese:document.getElementById("f_mese").value,nome:v(document.getElementById("f_nome").value),recapito:v(document.getElementById("f_recapito").value),medico:v(document.getElementById("f_medico").value),ordineChiamata:ordine,patologia:v(document.getElementById("f_patologia").value),dataInserimento:v(document.getElementById("f_dataInserimento").value)||today(),dataEsame:v(document.getElementById("f_dataEsame").value),conferma:v(document.getElementById("f_conferma").value),statoChiamata:document.getElementById("f_statoChiamata").value,ultimaChiamata:v(document.getElementById("f_ultimaChiamata").value),prossimoRichiamo:v(document.getElementById("f_prossimoRichiamo").value),esitoChiamata:v(document.getElementById("f_esitoChiamata").value),note:v(document.getElementById("f_note").value),noteChiamata:v(document.getElementById("f_noteChiamata").value),statoPrenotazione:document.getElementById("f_statoPrenotazione").value};
  if(!payload.nome){alert("Inserisci il nome del paziente.");return}
  const chosenYear=Number(document.getElementById("f_anno").value);
- // "anno" viene inviato solo se la colonna esiste. Prima proviamo senza per mantenere compatibilità con il DB attuale.
+ // La colonna anno deve essere presente in Supabase.
  try{
   let existing=!!state.editingId;
   let url=`${SUPABASE_URL}/rest/v1/${TABLE}`+(existing?`?id=eq.${encodeURIComponent(payload.id)}`:"");
   let res=await fetch(url,{method:existing?"PATCH":"POST",headers:headers(true),body:JSON.stringify(payload)});
   if(!res.ok)throw new Error(await res.text()||"Errore salvataggio");
   state.year=chosenYear;state.month=payload.mese;state.editingId=payload.id;state.selectedId=payload.id;
-  // Per DB senza colonna anno, il 2027 viene riconosciuto dalle date. Se è 2027 ma nessuna data lo indica, avvisiamo senza perdere il salvataggio.
   await caricaPazienti();closeEditor();
-  if(chosenYear===2027){const saved=findAny(payload.id);if(saved&&normalizeYear(saved)!==2027)alert("Scheda salvata. Per distinguere stabilmente il 2027 nel database serve la colonna 'anno'. Il file mantiene piena compatibilità con i dati 2026 esistenti.")}
  }catch(e){alert("Errore salvataggio: "+e.message)}
 }
 async function patch(id,obj){const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`,{method:"PATCH",headers:headers(true),body:JSON.stringify(obj)});if(!res.ok)throw new Error(await res.text()||"Errore aggiornamento");await caricaPazienti()}
