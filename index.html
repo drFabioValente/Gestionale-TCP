@@ -126,6 +126,14 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
  th:nth-child(10),td:nth-child(10){width:11%!important;min-width:100px!important}
 }
 
+
+/* Margine esterno richiesto: 1 cm sui quattro lati della pagina. */
+html { background: var(--bg); }
+body { padding: 1cm !important; min-height: 100vh; }
+.appbar { top: 0; border: 1px solid var(--line); border-radius: 16px; overflow: visible; }
+.container { width: 100% !important; max-width: none !important; padding: 16px 0 0 !important; }
+@media (max-width: 1400px) { .container { width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; } }
+@media (max-width: 650px) { body { padding: 1cm !important; } .container { padding: 12px 0 0 !important; } }
 </style>
 </head>
 <body>
