@@ -163,6 +163,26 @@ body { padding: 1cm !important; min-height: 100vh; }
 }
 tr.crossed-out td:not(:last-child){text-decoration:line-through;opacity:.48}
 tr.crossed-out td:last-child{opacity:.85}
+
+/* Intestazioni pulite: titolo per ordinare, una sola freccia per filtrare. */
+@media (min-width:761px){
+ table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+ th:nth-child(1),td:nth-child(1){width:22%!important}
+ th:nth-child(2),td:nth-child(2){width:13%!important}
+ th:nth-child(3),td:nth-child(3){width:11%!important}
+ th:nth-child(4),td:nth-child(4){width:11%!important}
+ th:nth-child(5),td:nth-child(5){width:11%!important}
+ th:nth-child(6),td:nth-child(6){width:10%!important}
+ th:nth-child(7),td:nth-child(7){width:10%!important}
+ th:nth-child(8),td:nth-child(8){width:12%!important;min-width:115px!important}
+}
+th,td{text-align:center!important;vertical-align:middle!important}
+.column-head{justify-content:center!important;gap:2px!important;flex-wrap:nowrap!important}
+.sort-head{text-align:center!important;padding:5px 1px!important;min-width:0!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important}
+.filter-head{padding:3px 1px!important;font-size:13px!important}
+td:first-child{font-weight:700;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
+td:nth-child(2){overflow-wrap:anywhere}
+th{overflow-wrap:normal!important;word-break:normal!important}
 </style>
 </head>
 <body>
@@ -208,13 +228,13 @@ tr.crossed-out td:last-child{opacity:.85}
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('nome')">Paziente <span id="sort_nome">↕</span></button><button type="button" class="filter-head" title="Filtra Paziente" onclick="filterColumn('nome')" id="filter_nome">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('recapito')">Recapito <span id="sort_recapito">↕</span></button><button type="button" class="filter-head" title="Filtra Recapito" onclick="filterColumn('recapito')" id="filter_recapito">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('medico')">Medico <span id="sort_medico">↕</span></button><button type="button" class="filter-head" title="Filtra Medico" onclick="filterColumn('medico')" id="filter_medico">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataProgrammata')">Programma <span id="sort_dataProgrammata">↕</span></button><button type="button" class="filter-head" title="Filtra Programma" onclick="filterColumn('dataProgrammata')" id="filter_dataProgrammata">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataEsame')">Data esame <span id="sort_dataEsame">↕</span></button><button type="button" class="filter-head" title="Filtra Data esame" onclick="filterColumn('dataEsame')" id="filter_dataEsame">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('statoPrenotazione')">Stato <span id="sort_statoPrenotazione">↕</span></button><button type="button" class="filter-head" title="Filtra Stato" onclick="filterColumn('statoPrenotazione')" id="filter_statoPrenotazione">▽</button></div></th>
-          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('note')">Note / esito <span id="sort_note">↕</span></button><button type="button" class="filter-head" title="Filtra Note / esito" onclick="filterColumn('note')" id="filter_note">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('nome')">Paziente</button><button type="button" class="filter-head" title="Filtra Paziente" onclick="filterColumn('nome')" id="filter_nome">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('recapito')">Recapito</button><button type="button" class="filter-head" title="Filtra Recapito" onclick="filterColumn('recapito')" id="filter_recapito">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('medico')">Medico</button><button type="button" class="filter-head" title="Filtra Medico" onclick="filterColumn('medico')" id="filter_medico">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataProgrammata')">Programma</button><button type="button" class="filter-head" title="Filtra Programma" onclick="filterColumn('dataProgrammata')" id="filter_dataProgrammata">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataEsame')">Data esame</button><button type="button" class="filter-head" title="Filtra Data esame" onclick="filterColumn('dataEsame')" id="filter_dataEsame">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('statoPrenotazione')">Stato</button><button type="button" class="filter-head" title="Filtra Stato" onclick="filterColumn('statoPrenotazione')" id="filter_statoPrenotazione">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('note')">Note / esito</button><button type="button" class="filter-head" title="Filtra Note / esito" onclick="filterColumn('note')" id="filter_note">▽</button></div></th>
           <th>Azioni</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
