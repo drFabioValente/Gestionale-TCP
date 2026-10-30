@@ -12,7 +12,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 #loginScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(145deg,#0f172a,#1e3a8a);display:flex;align-items:center;justify-content:center;padding:20px}.login-box{width:min(390px,100%);background:#fff;border-radius:24px;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.35);text-align:center}.login-logo{width:58px;height:58px;border-radius:17px;background:var(--primary);color:#fff;display:grid;place-items:center;margin:0 auto 16px;font-size:1.25rem;font-weight:900}.login-box h1{margin:0 0 6px}.small{font-size:.9rem;color:var(--muted);line-height:1.45}.login-error{display:none;color:var(--bad);font-weight:700;margin-top:10px}
 .appbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.appbar-inner{max-width:1500px;margin:auto;padding:13px 18px;display:flex;align-items:center;gap:12px}.brand{font-size:1.3rem;font-weight:900;letter-spacing:.02em}.spacer{flex:1}.year-tabs,.month-tabs,.toolbar,.row-actions,.modal-actions{display:flex;gap:8px;flex-wrap:wrap}.year-btn,.month-btn{border-radius:999px}.year-btn.active,.month-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
 .container{max-width:1500px;margin:auto;padding:18px}.hero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;margin-bottom:14px}.hero h2{margin:0 0 5px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.card-body{padding:16px}.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px}.kpi .n{font-size:1.45rem;font-weight:850;margin-top:3px}.month-tabs{margin:12px 0 16px}
-.filters{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:10px}.table-card{overflow:hidden}.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;min-width:1320px}th,td{padding:11px 9px;border-bottom:1px solid #e7edf5;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:1;font-size:.87rem;color:#475569}tr.selected{background:#f5f9ff}.badge{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:.8rem;font-weight:750;white-space:nowrap}.neutral{background:#e2e8f0;color:#334155}.ok{background:var(--okbg);color:var(--ok)}.warnbg{background:var(--warnbg);color:var(--warn)}.badbg{background:var(--badbg);color:var(--bad)}.blue{background:#dbeafe;color:#1d4ed8}.week{display:flex;align-items:center;gap:6px}.week input{width:58px}.empty{padding:30px;text-align:center;color:var(--muted)}
+.filters{display:grid;grid-template-columns:1fr;gap:10px}.table-card{overflow:hidden}.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:collapse;min-width:1320px}th,td{padding:11px 9px;border-bottom:1px solid #e7edf5;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:1;font-size:.87rem;color:#475569}tr.selected{background:#f5f9ff}.badge{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:.8rem;font-weight:750;white-space:nowrap}.neutral{background:#e2e8f0;color:#334155}.ok{background:var(--okbg);color:var(--ok)}.warnbg{background:var(--warnbg);color:var(--warn)}.badbg{background:var(--badbg);color:var(--bad)}.blue{background:#dbeafe;color:#1d4ed8}.week{display:flex;align-items:center;gap:6px}.week input{width:58px}.empty{padding:30px;text-align:center;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(980px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-head{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid var(--line);padding:15px 18px;display:flex;align-items:center;gap:12px}.modal-head h2{margin:0}.modal-body{padding:18px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:.88rem;font-weight:650;color:#475569}label input,label select,label textarea{margin-top:5px}.modal-actions{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:13px 0 0;margin-top:16px}
 .statusline{font-size:.86rem;color:var(--muted);margin-top:8px}.zoom-controls{display:flex;align-items:center;gap:6px}.zoom-controls button{width:40px;height:40px;padding:0;font-size:1.35rem;line-height:1}.zoom-label{min-width:48px;text-align:center;font-size:.82rem;color:var(--muted);font-weight:700}.statusline.error{color:var(--bad);font-weight:700}
 @media(max-width:900px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.appbar-inner{flex-wrap:wrap}}@media(max-width:650px){.container{padding:11px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.modal-backdrop{padding:0}.modal{height:100vh;max-height:100vh;border-radius:0}.kpis{grid-template-columns:1fr 1fr}.brand{font-size:1.1rem}}
@@ -111,21 +111,23 @@ input[type=text],input[type=password],input[type=number],input[type=date],select
 }
 
 
-/* Tabella compatta: colonne visibili su iPad */
-@media (min-width:761px){
+/* Otto colonne, ordinamento e filtri sulle intestazioni */
+.column-head{display:flex;align-items:center;justify-content:space-between;gap:3px}
+.sort-head,.filter-head{border:0;background:transparent;color:#334155;cursor:pointer;padding:5px 3px;font-size:inherit;font-weight:750;text-align:left}
+.sort-head:hover,.filter-head:hover{color:#1d4ed8;background:#eaf2ff;border-radius:5px}
+.filter-head{font-size:16px;flex-shrink:0}
+.filter-head.active-filter{color:#0b63ce;background:#dbeafe;border-radius:5px}
+@media(min-width:761px){
  table{width:100%!important;min-width:0!important;table-layout:fixed!important}
- th:nth-child(1),td:nth-child(1){width:5%!important}
- th:nth-child(2),td:nth-child(2){width:13%!important}
- th:nth-child(3),td:nth-child(3){width:11%!important}
+ th:nth-child(1),td:nth-child(1){width:15%!important}
+ th:nth-child(2),td:nth-child(2){width:12%!important}
+ th:nth-child(3),td:nth-child(3){width:12%!important}
  th:nth-child(4),td:nth-child(4){width:11%!important}
- th:nth-child(5),td:nth-child(5){width:9%!important}
- th:nth-child(6),td:nth-child(6){width:9%!important}
- th:nth-child(7),td:nth-child(7){width:9%!important}
- th:nth-child(8),td:nth-child(8){width:9%!important}
- th:nth-child(9),td:nth-child(9){width:13%!important}
- th:nth-child(10),td:nth-child(10){width:11%!important;min-width:100px!important}
+ th:nth-child(5),td:nth-child(5){width:11%!important}
+ th:nth-child(6),td:nth-child(6){width:10%!important}
+ th:nth-child(7),td:nth-child(7){width:12%!important}
+ th:nth-child(8),td:nth-child(8){width:17%!important}
 }
-
 
 /* Margine esterno richiesto: 1 cm sui quattro lati della pagina. */
 html { background: var(--bg); }
@@ -159,6 +161,8 @@ body { padding: 1cm !important; min-height: 100vh; }
  th:nth-child(8),td:nth-child(8){width:13%!important}
  th:nth-child(9),td:nth-child(9){width:14%!important;min-width:100px!important}
 }
+tr.crossed-out td:not(:last-child){text-decoration:line-through;opacity:.48}
+tr.crossed-out td:last-child{opacity:.85}
 </style>
 </head>
 <body>
@@ -200,25 +204,18 @@ body { padding: 1cm !important; min-height: 100vh; }
 
   <div id="monthTabs" class="month-tabs"></div>
 
-  <section class="card" style="margin-bottom:14px">
-    <div class="card-body">
-      <div class="filters">
-        <input id="searchInput" type="text" placeholder="Cerca nome, recapito, medico, patologia, note…" oninput="renderTable()">
-        <select id="filterCall" onchange="renderTable()">
-          <option value="">Tutte le chiamate</option><option>Non chiamato</option><option>Chiamato</option><option>Da richiamare</option><option>Non risponde</option><option>Rinuncia</option>
-        </select>
-        <select id="filterBooking" onchange="renderTable()">
-          <option value="">Tutti gli stati</option><option>In lista</option><option>Eseguito</option><option>Annullato</option>
-        </select>
-      </div>
-    </div>
-  </section>
-
   <section class="card table-card">
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Sett.</th><th>Paziente</th><th>Recapito</th><th>Medico</th><th>Programma</th><th>Data esame</th><th>Stato</th><th>Note / esito</th><th>Azioni</th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('nome')">Paziente <span id="sort_nome">↕</span></button><button type="button" class="filter-head" title="Filtra Paziente" onclick="filterColumn('nome')" id="filter_nome">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('recapito')">Recapito <span id="sort_recapito">↕</span></button><button type="button" class="filter-head" title="Filtra Recapito" onclick="filterColumn('recapito')" id="filter_recapito">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('medico')">Medico <span id="sort_medico">↕</span></button><button type="button" class="filter-head" title="Filtra Medico" onclick="filterColumn('medico')" id="filter_medico">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataProgrammata')">Programma <span id="sort_dataProgrammata">↕</span></button><button type="button" class="filter-head" title="Filtra Programma" onclick="filterColumn('dataProgrammata')" id="filter_dataProgrammata">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('dataEsame')">Data esame <span id="sort_dataEsame">↕</span></button><button type="button" class="filter-head" title="Filtra Data esame" onclick="filterColumn('dataEsame')" id="filter_dataEsame">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('statoPrenotazione')">Stato <span id="sort_statoPrenotazione">↕</span></button><button type="button" class="filter-head" title="Filtra Stato" onclick="filterColumn('statoPrenotazione')" id="filter_statoPrenotazione">▽</button></div></th>
+          <th><div class="column-head"><button type="button" class="sort-head" onclick="sortColumn('note')">Note / esito <span id="sort_note">↕</span></button><button type="button" class="filter-head" title="Filtra Note / esito" onclick="filterColumn('note')" id="filter_note">▽</button></div></th>
+          <th>Azioni</th>
         </tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -228,7 +225,7 @@ body { padding: 1cm !important; min-height: 100vh; }
 
 <div id="editorBackdrop" class="modal-backdrop" onclick="if(event.target===this)closeEditor()">
   <div class="modal">
-    <div class="modal-head"><div><h2 id="formTitle">Scheda paziente</h2><div class="small">Modifica i dati e salva.</div></div><div class="spacer"></div><button onclick="closeEditor()">Chiudi</button></div>
+    <div class="modal-head"><div><h2 id="formTitle">Scheda paziente</h2><div class="small">Le modifiche vengono salvate automaticamente.</div></div><div class="spacer"></div><button onclick="closeEditor()">Chiudi</button></div>
     <div class="modal-body">
       <div class="form-grid">
         <div><label>Nome<input id="f_nome" type="text"></label></div>
@@ -240,24 +237,19 @@ body { padding: 1cm !important; min-height: 100vh; }
         <div class="full"><label>Patologia<input id="f_patologia" type="text"></label></div>
         <div><label>Data inserimento<input id="f_dataInserimento" type="text"></label></div>
         <div><label>Data programmata<input id="f_dataProgrammata" type="text" placeholder="es. 19/03/2027"></label></div>
-        <div><label>Calendario programma<input id="f_dataProgrammataPicker" type="date" onchange="applyProgramDatePicker()"></label></div>
         <div><label>Data esame<input id="f_dataEsame" type="text" placeholder="es. 19/03/2026"></label></div>
-        <div><label>Calendario data esame<input id="f_dataEsamePicker" type="date" onchange="applyExamDatePicker()"></label></div>
-        <div><label>Conferma<input id="f_conferma" type="text"></label></div>
-        <div><label>Stato chiamata<select id="f_statoChiamata"><option>Non chiamato</option><option>Chiamato</option><option>Da richiamare</option><option>Non risponde</option><option>Rinuncia</option></select></label></div>
-        <div><label>Ultima chiamata<input id="f_ultimaChiamata" type="text"></label></div>
         <div><label>Prossimo richiamo<input id="f_prossimoRichiamo" type="text"></label></div>
-        <div><label>Stato<select id="f_statoPrenotazione"><option>In lista</option><option>Eseguito</option><option>Annullato</option></select></label></div>
-        <div class="full"><label>Esito chiamata<input id="f_esitoChiamata" type="text"></label></div>
+        <div><label>Stato<select id="f_statoPrenotazione"><option>In lista</option><option>Eseguito</option><option>Annullato</option><option>Depennato</option></select></label></div>
         <div class="full"><label>Note cliniche / organizzative<textarea id="f_note"></textarea></label></div>
-        <div class="full"><label>Note telefonate<textarea id="f_noteChiamata"></textarea></label></div>
       </div>
-      <div class="modal-actions">
-        <button class="primary" onclick="savePatient()">Salva scheda</button>
-        <button class="good" onclick="markEditingDone()">Eseguito</button>
-        <button class="warn" onclick="quickSetCall('Da richiamare')">Da richiamare</button>
-        <button class="bad" onclick="deletePatient()">Elimina paziente</button>
-      </div>
+      <div style="display:none"><input type="hidden" id="f_dataProgrammataPicker">
+<input type="hidden" id="f_dataEsamePicker">
+<input type="hidden" id="f_conferma">
+<input type="hidden" id="f_statoChiamata">
+<input type="hidden" id="f_ultimaChiamata">
+<input type="hidden" id="f_esitoChiamata">
+<input type="hidden" id="f_noteChiamata"></div>
+      <div class="modal-actions"><span id="autosaveStatus" class="small" aria-live="polite">Salvataggio automatico attivo</span></div>
     </div>
   </div>
 </div>
@@ -270,6 +262,8 @@ const TABLE="pazienti_tcp";
 const months=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 const years=[2026,2027];
 let state={year:2026,month:"Gennaio",rows:[],editingId:null,selectedId:null};
+let tableSort={key:"nome",dir:1};
+let columnFilters={};
 let appStarted=false;
 
 function v(x){return (x??"").toString().trim()}
@@ -279,7 +273,7 @@ function headers(prefer=false){const h={"apikey":SUPABASE_KEY,"Authorization":"B
 function setStatus(msg,error=false){const e=document.getElementById("dbStatus");e.textContent=msg;e.className="statusline"+(error?" error":"")}
 function normalizeYear(row){const raw=v(row.anno);return raw==="2027"?2027:2026}
 function normalizeMonth(row){const m=v(row.mese);return months.includes(m)?m:"Gennaio"}
-function badge(s,type){s=v(s)|| (type==="call"?"Non chiamato":"In lista");let c="neutral";if(s==="Chiamato"||s==="Eseguito")c="ok";else if(s==="Da richiamare")c="warnbg";else if(s==="Non risponde"||s==="Rinuncia"||s==="Annullato")c="badbg";else if(s==="In lista")c="blue";return `<span class="badge ${c}">${esc(s)}</span>`}
+function badge(s,type){s=v(s)|| (type==="call"?"Non chiamato":"In lista");let c="neutral";if(s==="Depennato")c="badbg";else if(s==="Chiamato"||s==="Eseguito")c="ok";else if(s==="Da richiamare")c="warnbg";else if(s==="Non risponde"||s==="Rinuncia"||s==="Annullato")c="badbg";else if(s==="In lista")c="blue";return `<span class="badge ${c}">${esc(s)}</span>`}
 
 function checkPassword(){const i=document.getElementById("passwordInput");if(i.value===APP_PASSWORD){sessionStorage.setItem("tcp_logged_in","yes");document.getElementById("loginScreen").style.display="none";startApp()}else{document.getElementById("loginError").style.display="block";i.value="";i.focus()}}
 function logout(){sessionStorage.removeItem("tcp_logged_in");location.reload()}
@@ -305,19 +299,47 @@ function renderNavigation(){
 function selectYear(y){state.year=y;state.selectedId=null;renderNavigation();renderTable()}
 function selectMonth(m){state.month=m;state.selectedId=null;renderNavigation();renderTable()}
 function currentRows(){return state.rows.filter(r=>normalizeYear(r)===state.year&&normalizeMonth(r)===state.month)}
+function columnValue(p,key){
+ if(key==="note")return [v(p.esitoChiamata),v(p.note),v(p.noteChiamata)].filter(Boolean).join(" • ");
+ return v(p[key]);
+}
+function dateSortValue(t){const m=v(t).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:v(t)}
+function sortColumn(key){if(tableSort.key===key)tableSort.dir*=-1;else tableSort={key,dir:1};renderTable()}
+function filterColumn(key){
+ const labels={nome:"Paziente",recapito:"Recapito",medico:"Medico",dataProgrammata:"Programma",dataEsame:"Data esame",statoPrenotazione:"Stato",note:"Note / esito"};
+ const value=prompt(`Filtra ${labels[key]}: inserisci il testo o la data da cercare.\nLascia vuoto per rimuovere il filtro.`,columnFilters[key]||"");
+ if(value===null)return;
+ if(value.trim())columnFilters[key]=value.trim();else delete columnFilters[key];
+ renderTable();
+}
+function updateColumnHeaders(){
+ for(const key of ["nome","recapito","medico","dataProgrammata","dataEsame","statoPrenotazione","note"]){
+  const arrow=document.getElementById("sort_"+key),filter=document.getElementById("filter_"+key);
+  if(arrow)arrow.textContent=tableSort.key===key?(tableSort.dir===1?"▲":"▼"):"↕";
+  if(filter){filter.textContent=columnFilters[key]?"▼":"▽";filter.classList.toggle("active-filter",!!columnFilters[key]);}
+ }
+}
 function filteredRows(){
- const q=v(document.getElementById("searchInput").value).toLowerCase(),fc=document.getElementById("filterCall").value,fb=document.getElementById("filterBooking").value;
- return currentRows().filter(p=>{const blob=[p.nome,p.recapito,p.medico,p.patologia,p.note,p.noteChiamata,p.esitoChiamata,p.dataInserimento,p.dataEsame,p.dataProgrammata].map(v).join(" ").toLowerCase();return(!q||blob.includes(q))&&(!fc||v(p.statoChiamata)===fc)&&(!fb||v(p.statoPrenotazione)===fb)}).sort((a,b)=>{const wa=Number(v(a.ordineChiamata))||99,wb=Number(v(b.ordineChiamata))||99;return wa-wb||v(a.nome).localeCompare(v(b.nome),"it")})
+ const q="";
+ return currentRows().filter(p=>{
+  const blob=[p.nome,p.recapito,p.medico,p.patologia,p.note,p.noteChiamata,p.esitoChiamata,p.dataInserimento,p.dataEsame,p.dataProgrammata].map(v).join(" ").toLowerCase();
+  return (!q||blob.includes(q))&&Object.entries(columnFilters).every(([key,filter])=>columnValue(p,key).toLowerCase().includes(filter.toLowerCase()));
+ }).sort((a,b)=>{
+  let va=columnValue(a,tableSort.key),vb=columnValue(b,tableSort.key);
+  if(["dataProgrammata","dataEsame"].includes(tableSort.key)){va=dateSortValue(va);vb=dateSortValue(vb)}
+  if(!va&&!vb)return v(a.nome).localeCompare(v(b.nome),"it");
+  if(!va)return 1;if(!vb)return -1;
+  return tableSort.dir*va.localeCompare(vb,"it",{numeric:true,sensitivity:"base"})||v(a.nome).localeCompare(v(b.nome),"it");
+ });
 }
 function renderTable(){
  const rows=filteredRows(),tb=document.getElementById("tableBody");
- tb.innerHTML=rows.length?rows.map(p=>`<tr class="${state.selectedId===p.id?"selected":""}">
- <td><div class="week"><input type="number" min="1" max="4" value="${esc(v(p.ordineChiamata))}" onchange="setOrder('${esc(p.id)}',this.value)"></div></td>
+ tb.innerHTML=rows.length?rows.map(p=>`<tr class="${[state.selectedId===p.id?"selected":"",p.statoPrenotazione==="Depennato"?"crossed-out":""].filter(Boolean).join(" ")}">
  <td><strong>${esc(p.nome)}</strong></td><td>${esc(p.recapito)}</td><td>${esc(p.medico)}</td><td>${esc(p.dataProgrammata)}</td><td>${esc(p.dataEsame)}</td>
  <td>${badge(p.statoPrenotazione,"booking")}</td>
  <td>${esc([v(p.esitoChiamata),v(p.note),v(p.noteChiamata)].filter(Boolean).join(" • "))}</td>
- <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim" onclick="editExamDate('${esc(p.id)}')">Data esame</button><button class="slim" onclick="editProgramDate('${esc(p.id)}')">Programma</button><button class="slim bad" onclick="deleteRowPatient('${esc(p.id)}')">Cancella</button></div></td></tr>`).join(""):`<tr><td colspan="9" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
- updateKpis();renderNavigation()
+ <td><div class="row-actions"><button class="slim primary" onclick="editPatient('${esc(p.id)}')">Apri</button><button class="slim good" onclick="markDone('${esc(p.id)}')">Eseguito</button><button class="slim" onclick="editExamDate('${esc(p.id)}')">Data esame</button><button class="slim" onclick="editProgramDate('${esc(p.id)}')">Programma</button><button class="slim bad" onclick="deleteRowPatient('${esc(p.id)}')">${p.statoPrenotazione==="Depennato"?"Ripristina":"Cancella"}</button></div></td></tr>`).join(""):`<tr><td colspan="8" class="empty">Nessun paziente in ${esc(state.month)} ${state.year}.</td></tr>`;
+ updateColumnHeaders();updateKpis();renderNavigation()
 }
 function updateKpis(){}
 
@@ -328,22 +350,40 @@ async function caricaPazienti(){
   if(!res.ok)throw new Error(await res.text()||`HTTP ${res.status}`);
   const data=await res.json();if(!Array.isArray(data))throw new Error("Risposta database non valida");
   state.rows=data;setStatus(`Database collegato: ${data.length} pazienti caricati.`);renderNavigation();renderTable()
- }catch(e){setStatus("Errore collegamento Supabase: "+e.message,true);document.getElementById("tableBody").innerHTML=`<tr><td colspan="9" class="empty">Impossibile caricare i pazienti. Nessun dato locale è stato cancellato.</td></tr>`}
+ }catch(e){setStatus("Errore collegamento Supabase: "+e.message,true);document.getElementById("tableBody").innerHTML=`<tr><td colspan="8" class="empty">Impossibile caricare i pazienti. Nessun dato locale è stato cancellato.</td></tr>`}
 }
 function findAny(id){return state.rows.find(p=>String(p.id)===String(id))}
-function openEditor(){document.getElementById("editorBackdrop").classList.add("open");document.body.classList.add("modal-open")}
-function closeEditor(){document.getElementById("editorBackdrop").classList.remove("open");document.body.classList.remove("modal-open")}
+function openEditor(){const picker=document.getElementById("f_dataProgrammataPicker");picker.style.display="none";document.getElementById("autosaveStatus").textContent="Salvataggio automatico attivo";document.getElementById("editorBackdrop").classList.add("open");document.body.classList.add("modal-open")}
+let autosaveTimer=null,autosaveBusy=false,autosaveAgain=false;
+function scheduleAutosave(){const status=document.getElementById("autosaveStatus");if(status)status.textContent="Modifiche da salvare…";clearTimeout(autosaveTimer);autosaveTimer=setTimeout(runAutosave,750)}
+async function runAutosave(){clearTimeout(autosaveTimer);if(autosaveBusy){autosaveAgain=true;return}if(!v(document.getElementById("f_nome").value))return;autosaveBusy=true;try{await savePatient()}finally{autosaveBusy=false;if(autosaveAgain){autosaveAgain=false;scheduleAutosave()}}}
+function closeEditor(){if(autosaveTimer){clearTimeout(autosaveTimer);autosaveTimer=null;runAutosave()}document.getElementById("editorBackdrop").classList.remove("open");document.body.classList.remove("modal-open")}
+document.querySelector("#editorBackdrop .form-grid").addEventListener("input",scheduleAutosave);
+document.querySelector("#editorBackdrop .form-grid").addEventListener("change",scheduleAutosave);
 function clearForm(){
  ["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","dataProgrammata","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k=>document.getElementById("f_"+k).value="");
- document.getElementById("f_anno").value=String(state.year);document.getElementById("f_mese").value=state.month;document.getElementById("f_dataInserimento").value=today();document.getElementById("f_dataEsamePicker").value="";document.getElementById("f_dataProgrammataPicker").value="";document.getElementById("f_statoChiamata").value="Non chiamato";document.getElementById("f_statoPrenotazione").value="In lista"
+ document.getElementById("f_anno").value=String(state.year);document.getElementById("f_mese").value=state.month;document.getElementById("f_dataInserimento").value=today();document.getElementById("f_statoPrenotazione").value="In lista"
 }
 function addNewPatient(){state.editingId=null;clearForm();document.getElementById("formTitle").textContent="Nuovo paziente";openEditor()}
-function editPatient(id){const p=findAny(id);if(!p)return;state.editingId=id;state.selectedId=id;["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","dataProgrammata","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k=>document.getElementById("f_"+k).value=v(p[k]));document.getElementById("f_dataProgrammataPicker").value=programIso(p.dataProgrammata);document.getElementById("f_anno").value=String(normalizeYear(p));document.getElementById("f_mese").value=normalizeMonth(p);document.getElementById("f_statoChiamata").value=v(p.statoChiamata)||"Non chiamato";let sp=v(p.statoPrenotazione)||"In lista";document.getElementById("f_statoPrenotazione").value=["In lista","Eseguito","Annullato"].includes(sp)?sp:"In lista";document.getElementById("formTitle").textContent="Scheda paziente";renderTable();openEditor()}
+function editPatient(id){const p=findAny(id);if(!p)return;state.editingId=id;state.selectedId=id;["nome","recapito","medico","ordineChiamata","patologia","dataInserimento","dataEsame","dataProgrammata","conferma","ultimaChiamata","prossimoRichiamo","esitoChiamata","note","noteChiamata"].forEach(k=>document.getElementById("f_"+k).value=v(p[k]));document.getElementById("f_anno").value=String(normalizeYear(p));document.getElementById("f_mese").value=normalizeMonth(p);let sp=v(p.statoPrenotazione)||"In lista";document.getElementById("f_statoPrenotazione").value=["In lista","Eseguito","Annullato","Depennato"].includes(sp)?sp:"In lista";document.getElementById("formTitle").textContent="Scheda paziente";renderTable();openEditor()}
 function editProgramDate(id){
  editPatient(id);
- setTimeout(()=>{const e=document.getElementById("f_dataProgrammataPicker");if(e){e.scrollIntoView({behavior:"smooth",block:"center"});e.focus();if(e.showPicker)try{e.showPicker()}catch(_){}}},100);
+ const p=findAny(id);
+ const monthIndex=months.indexOf(normalizeMonth(p));
+ const yr=normalizeYear(p);
+ const input=document.getElementById("f_dataProgrammata");
+ input.scrollIntoView({behavior:"smooth",block:"center"});
+ // Open native calendar already positioned on the month of the patient.
+ const picker=document.getElementById("f_dataProgrammataPicker");
+ picker.type="date";
+ picker.style.cssText="display:block;width:100%;margin-top:6px";
+ picker.value=programIso(p.dataProgrammata)||`${yr}-${String(monthIndex+1).padStart(2,"0")}-01`;
+ picker.onchange=()=>{applyProgramDatePicker();scheduleAutosave()};
+ picker.focus();
+ try{picker.showPicker()}catch(e){picker.click()}
 }
-function applyProgramDatePicker(){const iso=document.getElementById("f_dataProgrammataPicker").value;if(!iso)return;const [y,m,d]=iso.split("-");document.getElementById("f_dataProgrammata").value=`${d}/${m}/${y}`}
+
+function applyProgramDatePicker(){const iso=document.getElementById("f_dataProgrammataPicker").value;if(!iso)return;const [y,m,d]=iso.split("-");document.getElementById("f_dataProgrammata").value=`${d}/${m}/${y}`;scheduleAutosave()}
 function programIso(t){const m=v(t).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`:""}
 function editExamDate(id){
   editPatient(id);
@@ -357,7 +397,7 @@ function nextId(){let max=0;state.rows.forEach(p=>{const n=Number(String(p.id||"
 
 async function savePatient(){
  let ordine=v(document.getElementById("f_ordineChiamata").value);if(ordine){ordine=String(Math.max(1,Math.min(4,Math.round(Number(ordine)||1))))}
- const payload={id:state.editingId||nextId(),anno:Number(document.getElementById("f_anno").value),mese:document.getElementById("f_mese").value,nome:v(document.getElementById("f_nome").value),recapito:v(document.getElementById("f_recapito").value),medico:v(document.getElementById("f_medico").value),ordineChiamata:ordine,patologia:v(document.getElementById("f_patologia").value),dataInserimento:v(document.getElementById("f_dataInserimento").value)||today(),dataEsame:v(document.getElementById("f_dataEsame").value),dataProgrammata:v(document.getElementById("f_dataProgrammata").value),conferma:v(document.getElementById("f_conferma").value),statoChiamata:document.getElementById("f_statoChiamata").value,ultimaChiamata:v(document.getElementById("f_ultimaChiamata").value),prossimoRichiamo:v(document.getElementById("f_prossimoRichiamo").value),esitoChiamata:v(document.getElementById("f_esitoChiamata").value),note:v(document.getElementById("f_note").value),noteChiamata:v(document.getElementById("f_noteChiamata").value),statoPrenotazione:document.getElementById("f_statoPrenotazione").value};
+ const payload={id:state.editingId||nextId(),anno:Number(document.getElementById("f_anno").value),mese:document.getElementById("f_mese").value,nome:v(document.getElementById("f_nome").value),recapito:v(document.getElementById("f_recapito").value),medico:v(document.getElementById("f_medico").value),ordineChiamata:ordine,patologia:v(document.getElementById("f_patologia").value),dataInserimento:v(document.getElementById("f_dataInserimento").value)||today(),dataEsame:v(document.getElementById("f_dataEsame").value),dataProgrammata:v(document.getElementById("f_dataProgrammata").value),conferma:v(findAny(state.editingId)?.conferma),statoChiamata:v(findAny(state.editingId)?.statoChiamata),ultimaChiamata:v(findAny(state.editingId)?.ultimaChiamata),prossimoRichiamo:v(document.getElementById("f_prossimoRichiamo").value),esitoChiamata:v(findAny(state.editingId)?.esitoChiamata),note:v(document.getElementById("f_note").value),noteChiamata:v(findAny(state.editingId)?.noteChiamata),statoPrenotazione:document.getElementById("f_statoPrenotazione").value};
  if(!payload.nome){alert("Inserisci il nome del paziente.");return}
  const chosenYear=Number(document.getElementById("f_anno").value);
  // La colonna anno deve essere presente in Supabase.
@@ -367,8 +407,9 @@ async function savePatient(){
   let res=await fetch(url,{method:existing?"PATCH":"POST",headers:headers(true),body:JSON.stringify(payload)});
   if(!res.ok)throw new Error(await res.text()||"Errore salvataggio");
   state.year=chosenYear;state.month=payload.mese;state.editingId=payload.id;state.selectedId=payload.id;
-  await caricaPazienti();closeEditor();
- }catch(e){alert("Errore salvataggio: "+e.message)}
+  await caricaPazienti();
+  const status=document.getElementById("autosaveStatus");if(status)status.textContent="Salvato ✓";
+ }catch(e){const status=document.getElementById("autosaveStatus");if(status)status.textContent="Errore salvataggio: "+e.message;alert("Errore salvataggio: "+e.message)}
 }
 async function patch(id,obj){const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`,{method:"PATCH",headers:headers(true),body:JSON.stringify(obj)});if(!res.ok)throw new Error(await res.text()||"Errore aggiornamento");await caricaPazienti()}
 async function setOrder(id,x){let n=v(x);if(n)n=String(Math.max(1,Math.min(4,Math.round(Number(n)||1))));try{await patch(id,{ordineChiamata:n})}catch(e){alert(e.message)}}
@@ -377,20 +418,14 @@ async function markDone(id){try{await patch(id,{statoPrenotazione:"Eseguito",sta
 function quickSetCall(s){document.getElementById("f_statoChiamata").value=s;document.getElementById("f_ultimaChiamata").value=today()}
 function markEditingDone(){document.getElementById("f_statoPrenotazione").value="Eseguito";document.getElementById("f_statoChiamata").value="Chiamato";document.getElementById("f_ultimaChiamata").value=today()}
 async function deleteRowPatient(id){
- const p=findAny(id);
- if(!p)return;
- if(!confirm("Eliminare definitivamente il paziente "+v(p.nome)+"? Questa operazione non può essere annullata."))return;
- try{
-  const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`,{method:"DELETE",headers:headers(true)});
-  if(!res.ok)throw new Error(await res.text()||"Errore eliminazione");
-  const deleted=await res.json();
-  if(!Array.isArray(deleted)||deleted.length===0)throw new Error("Nessuna riga eliminata. Controllare i permessi Supabase.");
-  if(state.selectedId===id)state.selectedId=null;
-  if(state.editingId===id){state.editingId=null;closeEditor()}
-  await caricaPazienti();
- }catch(e){alert("Errore eliminazione: "+e.message)}
+ const p=findAny(id);if(!p)return;
+ const crossed=p.statoPrenotazione==="Depennato";
+ if(!confirm(crossed?`Ripristinare ${v(p.nome)}?`:`Depennare ${v(p.nome)}? I dati resteranno salvati.`))return;
+ try{await patch(id,{statoPrenotazione:crossed?"In lista":"Depennato"})}
+ catch(e){alert("Errore: "+e.message)}
 }
-async function deletePatient(){if(!state.editingId)return;if(!confirm("Eliminare definitivamente questo paziente?"))return;try{const res=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(state.editingId)}`,{method:"DELETE",headers:headers()});if(!res.ok)throw new Error(await res.text());state.editingId=null;state.selectedId=null;closeEditor();await caricaPazienti()}catch(e){alert("Errore eliminazione: "+e.message)}}
+
+async function deletePatient(){if(state.editingId)await deleteRowPatient(state.editingId)}
 
 function csvCell(x){return '"'+String(x??"").replaceAll('"','""')+'"'}
 function exportExcel(){
